@@ -1,3 +1,5 @@
+'use client';
+
 export default function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '2rem' }}>
@@ -16,58 +18,59 @@ export default function Home() {
             <div style={{ background: '#3b82f6', color: 'white', width: '2rem', height: '2rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', marginBottom: '1rem' }}>1</div>
             <h3 style={{ marginBottom: '0.5rem' }}>Download Templates</h3>
             <p style={{ color: '#6b7280', marginBottom: '1rem' }}>Get the correct CSV format for your data</p>
-            <button 
-              onClick={() => {
-                const csvContent = [
-                  ['Name', 'Purchase Price', 'Quantity', 'Unit'],
-                  ['Cheese', '25.00', '45', 'slices'],
-                  ['Flour', '3.50', '5', 'kg'],
-                  ['Chicken Breast', '12.00', '2', 'kg'],
-                  ['Tomato Sauce', '2.50', '1', 'liter'],
-                  ['Olive Oil', '8.00', '1', 'liter']
-                ].map(row => row.join(',')).join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ingredients-template.csv';
-                a.click();
-                window.URL.revokeObjectURL(url);
-              }}
-              style={{ background: '#10b981', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', marginRight: '0.5rem' }}
-            >
-              Ingredients Template
-            </button>
-            <button 
-              onClick={() => {
-                const csvContent = [
-                  ['Name', 'Selling Price', 'Category', 'Cheese (slices)', 'Qty', 'Flour (kg)', 'Qty'],
-                  ['Margherita Pizza', '12.00', 'main', 'Cheese', '3', 'Flour', '0.3'],
-                  ['Chicken Pizza', '15.00', 'main', 'Cheese', '3', 'Flour', '0.3'],
-                  ['Chicken Wings', '8.50', 'main', 'Cheese', '0', 'Flour', '0']
-                ].map(row => row.join(',')).join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'menu-template.csv';
-                a.click();
-                window.URL.revokeObjectURL(url);
-              }}
-              style={{ background: '#10b981', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }}
-            >
-              Menu Template
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => {
+                  const csvContent = [
+                    ['Name', 'Purchase Price', 'Quantity', 'Unit'],
+                    ['Cheese', '25.00', '45', 'slices'],
+                    ['Flour', '3.50', '5', 'kg'],
+                    ['Chicken Breast', '12.00', '2', 'kg'],
+                    ['Tomato Sauce', '2.50', '1', 'liter'],
+                    ['Olive Oil', '8.00', '1', 'liter']
+                  ].map(row => row.join(',')).join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'ingredients-template.csv';
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }}
+                style={{ background: '#10b981', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.875rem' }}
+              >
+                Ingredients Template
+              </button>
+              <button 
+                onClick={() => {
+                  const csvContent = [
+                    ['Name', 'Selling Price', 'Category', 'Cheese (slices)', 'Qty', 'Flour (kg)', 'Qty'],
+                    ['Margherita Pizza', '12.00', 'main', 'Cheese', '3', 'Flour', '0.3'],
+                    ['Chicken Pizza', '15.00', 'main', 'Cheese', '3', 'Flour', '0.3'],
+                    ['Chicken Wings', '8.50', 'main', 'Cheese', '0', 'Flour', '0']
+                  ].map(row => row.join(',')).join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'menu-template.csv';
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }}
+                style={{ background: '#10b981', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.875rem' }}
+              >
+                Menu Template
+              </button>
+            </div>
           </div>
 
           <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
             <div style={{ background: '#3b82f6', color: 'white', width: '2rem', height: '2rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', marginBottom: '1rem' }}>2</div>
             <h3 style={{ marginBottom: '0.5rem' }}>Upload Your Data</h3>
             <p style={{ color: '#6b7280', marginBottom: '1rem' }}>Upload your ingredients and menu items as CSV files</p>
-            <div style={{ border: '2px dashed #d1d5db', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', background: '#f9fafb' }}>
-              <p>📁 Drag & drop your CSV files here</p>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>or click to browse</p>
-              <input type="file" accept=".csv" multiple style={{ marginTop: '1rem', width: '100%' }} />
+            <div style={{ border: '2px dashed #d1d5db', borderRadius: '0.5rem', padding: '1rem', textAlign: 'center', background: '#f9fafb' }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem' }}>📁 Choose CSV files</p>
+              <input type="file" accept=".csv" multiple style={{ width: '100%', fontSize: '0.875rem' }} />
             </div>
           </div>
 
@@ -224,7 +227,7 @@ export default function Home() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>1</div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Needs Attention (<55%)</div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Needs Attention (&lt;55%)</div>
               </div>
             </div>
           </div>
