@@ -1,0 +1,157 @@
+{
+  "sampleBrands": [
+    {
+      "id": "sample-brand-1",
+      "name": "Wing Shack Co",
+      "menuItems": [
+        {
+          "id": "chicken-wings",
+          "name": "Buffalo Chicken Wings (6 pieces)",
+          "sellingPrice": 8.50,
+          "ingredients": [
+            {
+              "id": "chicken-wings-ingredient",
+              "name": "Chicken Wings",
+              "purchasePrice": 4.00,
+              "unit": "kg",
+              "quantityUsed": 0.5,
+              "costPerUnit": 8.00
+            },
+            {
+              "id": "buffalo-sauce",
+              "name": "Buffalo Sauce",
+              "purchasePrice": 3.00,
+              "unit": "liter",
+              "quantityUsed": 0.1,
+              "costPerUnit": 30.00
+            },
+            {
+              "id": "seasoning",
+              "name": "Cajun Seasoning",
+              "purchasePrice": 2.00,
+              "unit": "kg",
+              "quantityUsed": 0.05,
+              "costPerUnit": 40.00
+            },
+            {
+              "id": "oil",
+              "name": "Cooking Oil",
+              "purchasePrice": 1.50,
+              "unit": "liter",
+              "quantityUsed": 0.05,
+              "costPerUnit": 30.00
+            }
+          ],
+          "customizations": [
+            {
+              "id": "extra-sauce",
+              "name": "Extra Sauce",
+              "additionalCost": 0.50,
+              "additionalIngredients": []
+            },
+            {
+              "id": "extra-seasoning",
+              "name": "Extra Seasoning",
+              "additionalCost": 0.20,
+              "additionalIngredients": [
+                {
+                  "id": "extra-seasoning-ingredient",
+                  "name": "Cajun Seasoning",
+                  "purchasePrice": 2.00,
+                  "unit": "kg",
+                  "quantityUsed": 0.01,
+                  "costPerUnit": 200.00
+                }
+              ]
+            }
+          ],
+          "totalFoodCost": 0,
+          "grossProfit": 0,
+          "grossProfitPercentage": 0
+        },
+        {
+          "id": "loaded-fries",
+          "name": "Loaded Cheese Fries",
+          "sellingPrice": 6.50,
+          "ingredients": [
+            {
+              "id": "fries",
+              "name": "Frozen Fries",
+              "purchasePrice": 1.20,
+              "unit": "kg",
+              "quantityUsed": 0.3,
+              "costPerUnit": 4.00
+            },
+            {
+              "id": "cheese",
+              "name": "Cheddar Cheese",
+              "purchasePrice": 5.00,
+              "unit": "kg",
+              "quantityUsed": 0.1,
+              "costPerUnit": 50.00
+            },
+            {
+              "id": "bacon",
+              "name": "Bacon Bits",
+              "purchasePrice": 8.00,
+              "unit": "kg",
+              "quantityUsed": 0.05,
+              "costPerUnit": 160.00
+            },
+            {
+              "id": "sour-cream",
+              "name": "Sour Cream",
+              "purchasePrice": 2.50,
+              "unit": "liter",
+              "quantityUsed": 0.05,
+              "costPerUnit": 50.00
+            }
+          ],
+          "customizations": [
+            {
+              "id": "extra-cheese",
+              "name": "Extra Cheese",
+              "additionalCost": 1.00,
+              "additionalIngredients": [
+                {
+                  "id": "extra-cheese-ingredient",
+                  "name": "Cheddar Cheese",
+                  "purchasePrice": 5.00,
+                  "unit": "kg",
+                  "quantityUsed": 0.05,
+                  "costPerUnit": 100.00
+                }
+              ]
+            }
+          ],
+          "totalFoodCost": 0,
+          "grossProfit": 0,
+          "grossProfitPercentage": 0
+        }
+      ],
+      "totalRevenue": 0,
+      "totalFoodCosts": 0,
+      "overallGrossProfit": 0,
+      "overallGrossProfitPercentage": 0
+    }
+  ],
+  "calculationExamples": {
+    "chickenWings": {
+      "description": "Buffalo Chicken Wings (6 pieces) - £8.50",
+      "ingredients": {
+        "chickenWings": "0.5kg @ £4.00/kg = £2.00",
+        "buffaloSauce": "0.1L @ £3.00/L = £0.30",
+        "seasoning": "0.05kg @ £2.00/kg = £0.10",
+        "oil": "0.05L @ £1.50/L = £0.075"
+      },
+      "baseFoodCost": "£2.475",
+      "customizations": {
+        "extraSauce": "£0.50",
+        "extraSeasoning": "£0.20 + 0.01kg seasoning = £0.22"
+      },
+      "totalFoodCost": "£3.195",
+      "grossProfit": "£5.305",
+      "grossProfitPercentage": "62.4%"
+    }
+  }
+}
