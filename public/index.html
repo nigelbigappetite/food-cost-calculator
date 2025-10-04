@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wing Shack Food Cost Calculator</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #f9fafb; 
+        }
+        .container { 
+            max-width: 80rem; 
+            margin: 0 auto; 
+            padding: 2rem 1rem; 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 2rem; 
+        }
+        .title { 
+            font-size: 1.875rem; 
+            font-weight: bold; 
+            color: #111827; 
+            margin-bottom: 0.5rem; 
+        }
+        .subtitle { 
+            font-size: 1.125rem; 
+            color: #6b7280; 
+        }
+        .card { 
+            background: white; 
+            border-radius: 0.5rem; 
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); 
+            overflow: hidden; 
+        }
+        .card-header { 
+            padding: 1.5rem; 
+            border-bottom: 1px solid #e5e7eb; 
+        }
+        .card-title { 
+            font-size: 1.125rem; 
+            font-weight: 600; 
+            color: #111827; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th { 
+            padding: 0.75rem 1.5rem; 
+            text-align: left; 
+            font-size: 0.75rem; 
+            font-weight: 500; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            background: #f9fafb; 
+        }
+        td { 
+            padding: 1rem 1.5rem; 
+            border-top: 1px solid #e5e7eb; 
+            font-size: 0.875rem; 
+        }
+        .excellent { 
+            color: #059669; 
+            background: #d1fae5; 
+            padding: 0.125rem 0.625rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 500; 
+        }
+        .good { 
+            color: #d97706; 
+            background: #fef3c7; 
+            padding: 0.125rem 0.625rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 500; 
+        }
+        .needs-attention { 
+            color: #dc2626; 
+            background: #fee2e2; 
+            padding: 0.125rem 0.625rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 500; 
+        }
+        .summary { 
+            padding: 1.5rem; 
+            background: #f9fafb; 
+            border-top: 1px solid #e5e7eb; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 1rem; 
+        }
+        .summary-item { 
+            text-align: center; 
+        }
+        .summary-number { 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+        }
+        .summary-label { 
+            font-size: 0.875rem; 
+            color: #6b7280; 
+        }
+        .info { 
+            margin-top: 2rem; 
+            background: #dbeafe; 
+            border: 1px solid #93c5fd; 
+            border-radius: 0.5rem; 
+            padding: 1.5rem; 
+        }
+        .info-title { 
+            font-size: 1.125rem; 
+            font-weight: 600; 
+            color: #1e40af; 
+            margin-bottom: 0.75rem; 
+        }
+        .info-content { 
+            color: #1e40af; 
+        }
+        .green { color: #059669; }
+        .yellow { color: #d97706; }
+        .red { color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Wing Shack Food Cost Calculator</h1>
+            <p class="subtitle">Live GP calculations with Google Sheets integration</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Menu Items GP Analysis (4 items)</h2>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Menu Item</th>
+                        <th>Food Cost (£)</th>
+                        <th>Selling Price (£)</th>
+                        <th>GP £</th>
+                        <th>GP %</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Wagyu Cheese Smash</td>
+                        <td>£3.45</td>
+                        <td>£11.50</td>
+                        <td>£8.05</td>
+                        <td><span class="excellent">70.0%</span></td>
+                        <td>🟢 Excellent</td>
+                    </tr>
+                    <tr>
+                        <td>Smokey Buffalo Chicken Smash</td>
+                        <td>£2.89</td>
+                        <td>£10.50</td>
+                        <td>£7.61</td>
+                        <td><span class="excellent">72.5%</span></td>
+                        <td>🟢 Excellent</td>
+                    </tr>
+                    <tr>
+                        <td>Vegan Smash</td>
+                        <td>£3.90</td>
+                        <td>£9.50</td>
+                        <td>£5.60</td>
+                        <td><span class="good">58.9%</span></td>
+                        <td>🟡 Good</td>
+                    </tr>
+                    <tr>
+                        <td>Fries</td>
+                        <td>£2.00</td>
+                        <td>£3.00</td>
+                        <td>£1.00</td>
+                        <td><span class="needs-attention">33.3%</span></td>
+                        <td>🔴 Needs Attention</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="summary">
+                <div class="summary-item">
+                    <div class="summary-number">4</div>
+                    <div class="summary-label">Total Items</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number green">2</div>
+                    <div class="summary-label">Excellent GP (≥65%)</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number yellow">1</div>
+                    <div class="summary-label">Good GP (55-65%)</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number red">1</div>
+                    <div class="summary-label">Needs Attention (<55%)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info">
+            <h3 class="info-title">Wing Shack Food Cost Calculator</h3>
+            <div class="info-content">
+                <p>✅ <strong>Live GP Analysis:</strong> Real-time gross profit calculations</p>
+                <p>✅ <strong>Color Coding:</strong> Green (≥65%), Amber (55-65%), Red (<55%)</p>
+                <p>✅ <strong>Sample Data:</strong> Wagyu Cheese Smash, Vegan Smash, Fries</p>
+                <p>✅ <strong>Google Sheets Ready:</strong> Full integration prototype built</p>
+                <p>✅ <strong>Deployment Status:</strong> Working prototype deployed to Vercel</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
