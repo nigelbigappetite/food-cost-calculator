@@ -807,8 +807,17 @@ export default function Home() {
               <ChefHat className="h-8 w-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-900">Food Cost Calculator</h1>
             </div>
-            <div className="text-sm text-gray-500">
-              Hungry Tum Brands
+            <div className="flex items-center space-x-4">
+              <a
+                href="/foodcost"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Calculator className="h-4 w-4 mr-2" />
+                Google Sheets
+              </a>
+              <div className="text-sm text-gray-500">
+                Hungry Tum Brands
+              </div>
             </div>
           </div>
         </div>
