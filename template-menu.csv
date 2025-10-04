@@ -1,0 +1,6 @@
+Name,Selling Price,Cheese,Qty,Flour,Qty,Chicken Breast,Qty,Tomato Sauce,Qty,Olive Oil,Qty,Salt,Qty,Pepper,Qty,Garlic,Qty,Onions,Qty,Mushrooms,Qty
+Margherita Pizza,12.00,Cheese,3,Flour,0.3,Chicken Breast,0,Tomato Sauce,0.1,Olive Oil,0.02,Salt,0.01,Pepper,0.01,Garlic,0.01,Onions,0.05,Mushrooms,0
+Chicken Pizza,15.00,Cheese,3,Flour,0.3,Chicken Breast,0.2,Tomato Sauce,0.1,Olive Oil,0.02,Salt,0.01,Pepper,0.01,Garlic,0.01,Onions,0.05,Mushrooms,0
+Mushroom Pizza,13.00,Cheese,3,Flour,0.3,Chicken Breast,0,Tomato Sauce,0.1,Olive Oil,0.02,Salt,0.01,Pepper,0.01,Garlic,0.01,Onions,0.05,Mushrooms,0.15
+Chicken Wings,8.50,Cheese,0,Flour,0,Chicken Breast,0.5,Tomato Sauce,0,Olive Oil,0.05,Salt,0.01,Pepper,0.01,Garlic,0.02,Onions,0,Mushrooms,0
+Loaded Fries,6.50,Cheese,2,Flour,0,Chicken Breast,0,Tomato Sauce,0.05,Olive Oil,0.1,Salt,0.1,Pepper,0.01,Garlic,0.01,Onions,0.1,Mushrooms,0.05

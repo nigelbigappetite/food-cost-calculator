@@ -302,6 +302,44 @@ export default function Home() {
     window.URL.revokeObjectURL(url);
   };
 
+  const downloadTemplate = (type: 'ingredients' | 'menu') => {
+    let csvContent = '';
+    let filename = '';
+    
+    if (type === 'ingredients') {
+      csvContent = [
+        ['Name', 'Purchase Price', 'Quantity', 'Unit'],
+        ['Cheese', '10.00', '112', 'slices'],
+        ['Chicken Breast', '15.00', '2', 'kg'],
+        ['Flour', '2.50', '5', 'kg'],
+        ['Tomato Sauce', '3.00', '1', 'liter'],
+        ['Olive Oil', '8.00', '1', 'liter'],
+        ['Salt', '1.50', '1', 'kg'],
+        ['Pepper', '2.00', '1', 'kg'],
+        ['Garlic', '3.00', '0.5', 'kg'],
+        ['Onions', '2.00', '2', 'kg'],
+        ['Mushrooms', '4.00', '1', 'kg']
+      ].map(row => row.join(',')).join('\n');
+      filename = 'ingredients-template.csv';
+    } else {
+      csvContent = [
+        ['Name', 'Selling Price', 'Cheese', 'Qty', 'Flour', 'Qty', 'Chicken Breast', 'Qty', 'Tomato Sauce', 'Qty', 'Olive Oil', 'Qty', 'Salt', 'Qty', 'Pepper', 'Qty', 'Garlic', 'Qty', 'Onions', 'Qty', 'Mushrooms', 'Qty'],
+        ['Margherita Pizza', '12.00', 'Cheese', '3', 'Flour', '0.3', 'Chicken Breast', '0', 'Tomato Sauce', '0.1', 'Olive Oil', '0.02', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.05', 'Mushrooms', '0'],
+        ['Chicken Pizza', '15.00', 'Cheese', '3', 'Flour', '0.3', 'Chicken Breast', '0.2', 'Tomato Sauce', '0.1', 'Olive Oil', '0.02', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.05', 'Mushrooms', '0'],
+        ['Chicken Wings', '8.50', 'Cheese', '0', 'Flour', '0', 'Chicken Breast', '0.5', 'Tomato Sauce', '0', 'Olive Oil', '0.05', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.02', 'Onions', '0', 'Mushrooms', '0']
+      ].map(row => row.join(',')).join('\n');
+      filename = 'menu-template.csv';
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const totalRevenue = calculatedItems.reduce((sum, item) => sum + item.sellingPrice, 0);
   const totalFoodCosts = calculatedItems.reduce((sum, item) => sum + item.totalFoodCost, 0);
   const overallGrossProfit = totalRevenue - totalFoodCosts;
@@ -349,12 +387,21 @@ export default function Home() {
                     className="hidden"
                     id="ingredients-upload"
                   />
-                  <label
-                    htmlFor="ingredients-upload"
-                    className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
-                  >
-                    Upload Ingredients CSV
-                  </label>
+                  <div className="space-y-3">
+                    <label
+                      htmlFor="ingredients-upload"
+                      className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
+                    >
+                      Upload Ingredients CSV
+                    </label>
+                    <div className="text-sm text-gray-500">or</div>
+                    <button
+                      onClick={() => downloadTemplate('ingredients')}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 inline-block"
+                    >
+                      Download Template
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-500 mt-2">
                     Example: Cheese, £10.00, 112, slices
                   </p>
@@ -390,12 +437,21 @@ export default function Home() {
                     className="hidden"
                     id="menu-upload"
                   />
-                  <label
-                    htmlFor="menu-upload"
-                    className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
-                  >
-                    Upload Menu CSV
-                  </label>
+                  <div className="space-y-3">
+                    <label
+                      htmlFor="menu-upload"
+                      className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
+                    >
+                      Upload Menu CSV
+                    </label>
+                    <div className="text-sm text-gray-500">or</div>
+                    <button
+                      onClick={() => downloadTemplate('menu')}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 inline-block"
+                    >
+                      Download Template
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-500 mt-2">
                     Example: Pizza, £12.00, Cheese, 2, Flour, 0.5
                   </p>
