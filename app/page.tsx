@@ -14,6 +14,7 @@ interface Ingredient {
 interface MenuItem {
   name: string;
   sellingPrice: number;
+  category: 'main' | 'side' | 'drink' | 'dessert' | 'other';
   ingredients: {
     name: string;
     quantity: number;
@@ -202,14 +203,14 @@ export default function Home() {
         }
 
         const header = rows[0].map(h => h.toLowerCase().trim());
-        const expectedHeaders = ['name', 'selling price'];
+        const expectedHeaders = ['name', 'selling price', 'category'];
         
         if (!expectedHeaders.every(expected => 
           header.some(h => h.includes(expected.replace(' ', '')) || h === expected)
         )) {
           setUploadStatus({ 
             type: 'error', 
-            message: 'CSV must have columns: Name, Selling Price, and ingredient columns' 
+            message: 'CSV must have columns: Name, Selling Price, Category, and ingredient columns' 
           });
           return;
         }
@@ -217,11 +218,12 @@ export default function Home() {
         const newMenuItems: MenuItem[] = rows.slice(1).map(row => {
           const name = row[0]?.trim() || '';
           const sellingPrice = parseFloat(row[1]?.replace(/[£$]/g, '') || '0');
+          const category = (row[2]?.trim().toLowerCase() as 'main' | 'side' | 'drink' | 'dessert' | 'other') || 'other';
           
           // Extract ingredients from remaining columns
           const itemIngredients: { name: string; quantity: number; unit: string }[] = [];
           
-          for (let i = 2; i < row.length; i += 2) {
+          for (let i = 3; i < row.length; i += 2) {
             const ingredientName = row[i]?.trim();
             const quantity = parseFloat(row[i + 1] || '0');
             
@@ -242,6 +244,7 @@ export default function Home() {
           return {
             name,
             sellingPrice,
+            category,
             ingredients: itemIngredients
           };
         }).filter(item => item.name && item.sellingPrice > 0);
@@ -563,10 +566,11 @@ export default function Home() {
         const componentBreakdown: { itemName: string; category: string; individualCost: number; individualSellingPrice: number }[] = [];
 
         deal.components.forEach(component => {
-          // Find the individual menu item
+          // Find the individual menu item by name and category
           const matchingItem = calculated.find(item => 
-            item.name.toLowerCase().includes(component.itemName.toLowerCase()) ||
-            component.itemName.toLowerCase().includes(item.name.toLowerCase())
+            (item.name.toLowerCase().includes(component.itemName.toLowerCase()) ||
+            component.itemName.toLowerCase().includes(item.name.toLowerCase())) &&
+            item.category === component.category
           );
 
           if (matchingItem) {
@@ -611,10 +615,11 @@ export default function Home() {
 
         deal.components.forEach(component => {
           if (component.isFlexible) {
-            // Find all items of this type and calculate average
+            // Find all items of this type and category, calculate average
             const matchingItems = calculated.filter(item => 
-              item.name.toLowerCase().includes(component.itemType.toLowerCase()) ||
-              component.itemType.toLowerCase().includes(item.name.toLowerCase())
+              item.category === component.category &&
+              (item.name.toLowerCase().includes(component.itemType.toLowerCase()) ||
+              component.itemType.toLowerCase().includes(item.name.toLowerCase()))
             );
 
             if (matchingItems.length > 0) {
@@ -642,10 +647,11 @@ export default function Home() {
               });
             }
           } else {
-            // Specific item - find exact match
+            // Specific item - find exact match by name and category
             const matchingItem = calculated.find(item => 
-              item.name.toLowerCase().includes(component.specificItem?.toLowerCase() || '') ||
-              component.specificItem?.toLowerCase().includes(item.name.toLowerCase())
+              item.category === component.category &&
+              (item.name.toLowerCase().includes(component.specificItem?.toLowerCase() || '') ||
+              component.specificItem?.toLowerCase().includes(item.name.toLowerCase()))
             );
 
             if (matchingItem) {
@@ -736,10 +742,12 @@ export default function Home() {
       filename = 'ingredients-template.csv';
     } else if (type === 'menu') {
       csvContent = [
-        ['Name', 'Selling Price', 'Cheese', 'Qty', 'Flour', 'Qty', 'Chicken Breast', 'Qty', 'Tomato Sauce', 'Qty', 'Olive Oil', 'Qty', 'Salt', 'Qty', 'Pepper', 'Qty', 'Garlic', 'Qty', 'Onions', 'Qty', 'Mushrooms', 'Qty'],
-        ['Margherita Pizza', '12.00', 'Cheese', '3', 'Flour', '0.3', 'Chicken Breast', '0', 'Tomato Sauce', '0.1', 'Olive Oil', '0.02', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.05', 'Mushrooms', '0'],
-        ['Chicken Pizza', '15.00', 'Cheese', '3', 'Flour', '0.3', 'Chicken Breast', '0.2', 'Tomato Sauce', '0.1', 'Olive Oil', '0.02', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.05', 'Mushrooms', '0'],
-        ['Chicken Wings', '8.50', 'Cheese', '0', 'Flour', '0', 'Chicken Breast', '0.5', 'Tomato Sauce', '0', 'Olive Oil', '0.05', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.02', 'Onions', '0', 'Mushrooms', '0']
+        ['Name', 'Selling Price', 'Category', 'Cheese', 'Qty', 'Flour', 'Qty', 'Chicken Breast', 'Qty', 'Tomato Sauce', 'Qty', 'Olive Oil', 'Qty', 'Salt', 'Qty', 'Pepper', 'Qty', 'Garlic', 'Qty', 'Onions', 'Qty', 'Mushrooms', 'Qty'],
+        ['Margherita Pizza', '12.00', 'main', 'Cheese', '3', 'Flour', '0.3', 'Chicken Breast', '0', 'Tomato Sauce', '0.1', 'Olive Oil', '0.02', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.05', 'Mushrooms', '0'],
+        ['Chicken Pizza', '15.00', 'main', 'Cheese', '3', 'Flour', '0.3', 'Chicken Breast', '0.2', 'Tomato Sauce', '0.1', 'Olive Oil', '0.02', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.05', 'Mushrooms', '0'],
+        ['Chicken Wings', '8.50', 'main', 'Cheese', '0', 'Flour', '0', 'Chicken Breast', '0.5', 'Tomato Sauce', '0', 'Olive Oil', '0.05', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.02', 'Onions', '0', 'Mushrooms', '0'],
+        ['Loaded Fries', '6.50', 'side', 'Cheese', '2', 'Flour', '0', 'Chicken Breast', '0', 'Tomato Sauce', '0.05', 'Olive Oil', '0.1', 'Salt', '0.1', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.1', 'Mushrooms', '0.05'],
+        ['Coke', '2.50', 'drink', 'Cheese', '0', 'Flour', '0', 'Chicken Breast', '0', 'Tomato Sauce', '0', 'Olive Oil', '0', 'Salt', '0', 'Pepper', '0', 'Garlic', '0', 'Onions', '0', 'Mushrooms', '0']
       ].map(row => row.join(',')).join('\n');
       filename = 'menu-template.csv';
     } else if (type === 'item-variants') {
@@ -868,7 +876,7 @@ export default function Home() {
                   <span>Menu Items Data</span>
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Upload CSV with: Name, Selling Price, Ingredient1, Qty1, Ingredient2, Qty2...
+                  Upload CSV with: Name, Selling Price, Category, Ingredient1, Qty1, Ingredient2, Qty2...
                 </p>
               </div>
               <div className="px-6 py-4">
@@ -897,7 +905,7 @@ export default function Home() {
                     </button>
                   </div>
                   <p className="text-sm text-gray-500 mt-2">
-                    Example: Pizza, £12.00, Cheese, 2, Flour, 0.5
+                    Example: Pizza, £12.00, main, Cheese, 2, Flour, 0.5
                   </p>
                 </div>
                 {menuItems.length > 0 && (
