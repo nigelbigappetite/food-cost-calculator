@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Food Cost Calculator - Hungry Tummy Brands',
+  title: 'Food Cost Calculator - Hungry Tum Brands',
   description: 'Calculate food costs, gross profit percentages, and ingredient breakdowns for your restaurant menu items.',
 }
 

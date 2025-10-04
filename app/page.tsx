@@ -1,119 +1,311 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Trash2, Calculator, ChefHat } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Upload, FileText, Calculator, ChefHat, Download, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface Ingredient {
-  id: string;
   name: string;
   purchasePrice: number;
+  quantity: number;
   unit: string;
-  quantityUsed: number;
+  costPerUnit: number;
 }
 
 interface MenuItem {
-  id: string;
   name: string;
   sellingPrice: number;
-  ingredients: Ingredient[];
+  ingredients: {
+    name: string;
+    quantity: number;
+    unit: string;
+  }[];
+  customizations?: {
+    name: string;
+    additionalCost: number;
+    additionalIngredients?: {
+      name: string;
+      quantity: number;
+      unit: string;
+    }[];
+  }[];
+}
+
+interface CalculatedMenuItem extends MenuItem {
   totalFoodCost: number;
   grossProfit: number;
   grossProfitPercentage: number;
+  ingredientBreakdown: {
+    ingredient: string;
+    cost: number;
+    percentage: number;
+  }[];
 }
 
 export default function Home() {
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [currentItem, setCurrentItem] = useState<MenuItem>({
-    id: '',
-    name: '',
-    sellingPrice: 0,
-    ingredients: [],
-    totalFoodCost: 0,
-    grossProfit: 0,
-    grossProfitPercentage: 0,
-  });
+  const [calculatedItems, setCalculatedItems] = useState<CalculatedMenuItem[]>([]);
+  const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
+  const [isCalculated, setIsCalculated] = useState(false);
 
-  const addIngredient = () => {
-    const newIngredient: Ingredient = {
-      id: Date.now().toString(),
-      name: '',
-      purchasePrice: 0,
-      unit: 'kg',
-      quantityUsed: 0,
-    };
-    setCurrentItem(prev => ({
-      ...prev,
-      ingredients: [...prev.ingredients, newIngredient],
-    }));
-  };
-
-  const updateIngredient = (id: string, field: keyof Ingredient, value: string | number) => {
-    setCurrentItem(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.map(ingredient =>
-        ingredient.id === id ? { ...ingredient, [field]: value } : ingredient
-      ),
-    }));
-  };
-
-  const removeIngredient = (id: string) => {
-    setCurrentItem(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.filter(ingredient => ingredient.id !== id),
-    }));
-  };
-
-  const calculateItemCosts = (item: MenuItem): MenuItem => {
-    const totalFoodCost = item.ingredients.reduce((total, ingredient) => {
-      return total + (ingredient.purchasePrice * ingredient.quantityUsed);
-    }, 0);
-    
-    const grossProfit = item.sellingPrice - totalFoodCost;
-    const grossProfitPercentage = item.sellingPrice > 0 ? (grossProfit / item.sellingPrice) * 100 : 0;
-
-    return {
-      ...item,
-      totalFoodCost,
-      grossProfit,
-      grossProfitPercentage,
-    };
-  };
-
-  const addMenuItem = () => {
-    if (currentItem.name && currentItem.sellingPrice > 0 && currentItem.ingredients.length > 0) {
-      const calculatedItem = calculateItemCosts({
-        ...currentItem,
-        id: Date.now().toString(),
-      });
+  const parseCSV = (csvText: string): string[][] => {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
       
-      setMenuItems(prev => [...prev, calculatedItem]);
-      setCurrentItem({
-        id: '',
-        name: '',
-        sellingPrice: 0,
-        ingredients: [],
-        totalFoodCost: 0,
-        grossProfit: 0,
-        grossProfitPercentage: 0,
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    });
+  };
+
+  const handleIngredientsUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target?.result as string;
+        const rows = parseCSV(csvText);
+        
+        if (rows.length < 2) {
+          setUploadStatus({ type: 'error', message: 'CSV must have at least a header row and one data row' });
+          return;
+        }
+
+        const header = rows[0].map(h => h.toLowerCase().trim());
+        const expectedHeaders = ['name', 'purchase price', 'quantity', 'unit'];
+        
+        // Check if required headers exist
+        const hasRequiredHeaders = expectedHeaders.every(expected => 
+          header.some(h => h.includes(expected.replace(' ', '')) || h === expected)
+        );
+
+        if (!hasRequiredHeaders) {
+          setUploadStatus({ 
+            type: 'error', 
+            message: 'CSV must have columns: Name, Purchase Price, Quantity, Unit' 
+          });
+          return;
+        }
+
+        const newIngredients: Ingredient[] = rows.slice(1).map(row => {
+          const name = row[0]?.trim() || '';
+          const purchasePrice = parseFloat(row[1]?.replace(/[£$]/g, '') || '0');
+          const quantity = parseFloat(row[2] || '0');
+          const unit = row[3]?.trim() || 'kg';
+          
+          return {
+            name,
+            purchasePrice,
+            quantity,
+            unit,
+            costPerUnit: quantity > 0 ? purchasePrice / quantity : 0
+          };
+        }).filter(ing => ing.name && ing.purchasePrice > 0 && ing.quantity > 0);
+
+        setIngredients(newIngredients);
+        setUploadStatus({ 
+          type: 'success', 
+          message: `Successfully loaded ${newIngredients.length} ingredients` 
+        });
+      } catch (error) {
+        setUploadStatus({ type: 'error', message: 'Error parsing CSV file' });
+      }
+    };
+    reader.readAsText(file);
+  }, []);
+
+  const handleMenuUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target?.result as string;
+        const rows = parseCSV(csvText);
+        
+        if (rows.length < 2) {
+          setUploadStatus({ type: 'error', message: 'CSV must have at least a header row and one data row' });
+          return;
+        }
+
+        const header = rows[0].map(h => h.toLowerCase().trim());
+        const expectedHeaders = ['name', 'selling price'];
+        
+        if (!expectedHeaders.every(expected => 
+          header.some(h => h.includes(expected.replace(' ', '')) || h === expected)
+        )) {
+          setUploadStatus({ 
+            type: 'error', 
+            message: 'CSV must have columns: Name, Selling Price, and ingredient columns' 
+          });
+          return;
+        }
+
+        const newMenuItems: MenuItem[] = rows.slice(1).map(row => {
+          const name = row[0]?.trim() || '';
+          const sellingPrice = parseFloat(row[1]?.replace(/[£$]/g, '') || '0');
+          
+          // Extract ingredients from remaining columns
+          const itemIngredients: { name: string; quantity: number; unit: string }[] = [];
+          
+          for (let i = 2; i < row.length; i += 2) {
+            const ingredientName = row[i]?.trim();
+            const quantity = parseFloat(row[i + 1] || '0');
+            
+            if (ingredientName && quantity > 0) {
+              // Try to extract unit from ingredient name (e.g., "Flour (kg)" -> "Flour", "kg")
+              const unitMatch = ingredientName.match(/\(([^)]+)\)$/);
+              const cleanName = unitMatch ? ingredientName.replace(/\s*\([^)]+\)$/, '') : ingredientName;
+              const unit = unitMatch ? unitMatch[1] : 'kg';
+              
+              itemIngredients.push({
+                name: cleanName,
+                quantity,
+                unit
+              });
+            }
+          }
+
+          return {
+            name,
+            sellingPrice,
+            ingredients: itemIngredients
+          };
+        }).filter(item => item.name && item.sellingPrice > 0);
+
+        setMenuItems(newMenuItems);
+        setUploadStatus({ 
+          type: 'success', 
+          message: `Successfully loaded ${newMenuItems.length} menu items` 
+        });
+      } catch (error) {
+        setUploadStatus({ type: 'error', message: 'Error parsing CSV file' });
+      }
+    };
+    reader.readAsText(file);
+  }, []);
+
+  const calculateFoodCosts = () => {
+    if (ingredients.length === 0 || menuItems.length === 0) {
+      setUploadStatus({ 
+        type: 'error', 
+        message: 'Please upload both ingredients and menu items first' 
       });
+      return;
     }
+
+    const calculated: CalculatedMenuItem[] = menuItems.map(item => {
+      let totalFoodCost = 0;
+      const ingredientBreakdown: { ingredient: string; cost: number; percentage: number }[] = [];
+
+      item.ingredients.forEach(ingredient => {
+        // Find matching ingredient in our ingredients list
+        const matchingIngredient = ingredients.find(ing => 
+          ing.name.toLowerCase().includes(ingredient.name.toLowerCase()) ||
+          ingredient.name.toLowerCase().includes(ing.name.toLowerCase())
+        );
+
+        if (matchingIngredient) {
+          // Convert units if needed (simplified - you might want more sophisticated unit conversion)
+          let quantityInMatchingUnit = ingredient.quantity;
+          if (ingredient.unit !== matchingIngredient.unit) {
+            // Basic unit conversion (you might want to expand this)
+            if (ingredient.unit === 'g' && matchingIngredient.unit === 'kg') {
+              quantityInMatchingUnit = ingredient.quantity / 1000;
+            } else if (ingredient.unit === 'kg' && matchingIngredient.unit === 'g') {
+              quantityInMatchingUnit = ingredient.quantity * 1000;
+            } else if (ingredient.unit === 'ml' && matchingIngredient.unit === 'liter') {
+              quantityInMatchingUnit = ingredient.quantity / 1000;
+            } else if (ingredient.unit === 'liter' && matchingIngredient.unit === 'ml') {
+              quantityInMatchingUnit = ingredient.quantity * 1000;
+            }
+          }
+
+          const cost = quantityInMatchingUnit * matchingIngredient.costPerUnit;
+          totalFoodCost += cost;
+          
+          ingredientBreakdown.push({
+            ingredient: ingredient.name,
+            cost,
+            percentage: 0 // Will calculate after we have total
+          });
+        } else {
+          // Ingredient not found - you might want to handle this differently
+          ingredientBreakdown.push({
+            ingredient: `${ingredient.name} (not found)`,
+            cost: 0,
+            percentage: 0
+          });
+        }
+      });
+
+      // Calculate percentages
+      ingredientBreakdown.forEach(breakdown => {
+        breakdown.percentage = totalFoodCost > 0 ? (breakdown.cost / totalFoodCost) * 100 : 0;
+      });
+
+      const grossProfit = item.sellingPrice - totalFoodCost;
+      const grossProfitPercentage = item.sellingPrice > 0 ? (grossProfit / item.sellingPrice) * 100 : 0;
+
+      return {
+        ...item,
+        totalFoodCost,
+        grossProfit,
+        grossProfitPercentage,
+        ingredientBreakdown
+      };
+    });
+
+    setCalculatedItems(calculated);
+    setIsCalculated(true);
+    setUploadStatus({ 
+      type: 'success', 
+      message: `Calculated food costs for ${calculated.length} menu items` 
+    });
   };
 
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-    }).format(amount);
+  const downloadResults = () => {
+    const csvContent = [
+      ['Menu Item', 'Selling Price', 'Food Cost', 'Gross Profit', 'GP %', 'Ingredients'],
+      ...calculatedItems.map(item => [
+        item.name,
+        `£${item.sellingPrice.toFixed(2)}`,
+        `£${item.totalFoodCost.toFixed(2)}`,
+        `£${item.grossProfit.toFixed(2)}`,
+        `${item.grossProfitPercentage.toFixed(2)}%`,
+        item.ingredientBreakdown.map(ing => `${ing.ingredient}: £${ing.cost.toFixed(2)}`).join('; ')
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'food-cost-analysis.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
-  const formatPercentage = (percentage: number): string => {
-    return `${percentage.toFixed(2)}%`;
-  };
-
-  const totalRevenue = menuItems.reduce((total, item) => total + item.sellingPrice, 0);
-  const totalFoodCosts = menuItems.reduce((total, item) => total + item.totalFoodCost, 0);
+  const totalRevenue = calculatedItems.reduce((sum, item) => sum + item.sellingPrice, 0);
+  const totalFoodCosts = calculatedItems.reduce((sum, item) => sum + item.totalFoodCost, 0);
   const overallGrossProfit = totalRevenue - totalFoodCosts;
-  const overallGrossProfitPercentage = totalRevenue > 0 ? (overallGrossProfit / totalRevenue) * 100 : 0;
+  const overallGPPercentage = totalRevenue > 0 ? (overallGrossProfit / totalRevenue) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -126,264 +318,226 @@ export default function Home() {
               <h1 className="text-2xl font-bold text-gray-900">Food Cost Calculator</h1>
             </div>
             <div className="text-sm text-gray-500">
-              Hungry Tummy Brands
+              Hungry Tum Brands
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Input Section */}
-          <div className="space-y-6">
-            {/* Menu Item Information */}
+        <div className="space-y-8">
+          {/* Upload Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Ingredients Upload */}
             <div className="bg-white rounded-lg shadow-md border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Menu Item</h2>
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                  <FileText className="h-5 w-5" />
+                  <span>Ingredients Data</span>
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Upload CSV with: Name, Purchase Price, Quantity, Unit
+                </p>
               </div>
-              <div className="px-6 py-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Item Name
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      value={currentItem.name}
-                      onChange={(e) => setCurrentItem(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Chicken Wings"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Selling Price (£)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      value={currentItem.sellingPrice}
-                      onChange={(e) => setCurrentItem(prev => ({ ...prev, sellingPrice: parseFloat(e.target.value) || 0 }))}
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Ingredients */}
-            <div className="bg-white rounded-lg shadow-md border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-gray-900">Ingredients</h2>
-                  <button
-                    onClick={addIngredient}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center space-x-2"
+              <div className="px-6 py-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleIngredientsUpload}
+                    className="hidden"
+                    id="ingredients-upload"
+                  />
+                  <label
+                    htmlFor="ingredients-upload"
+                    className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
                   >
-                    <Plus className="h-4 w-4" />
-                    <span>Add Ingredient</span>
-                  </button>
+                    Upload Ingredients CSV
+                  </label>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Example: Cheese, £10.00, 112, slices
+                  </p>
                 </div>
-              </div>
-              <div className="px-6 py-4 space-y-4">
-                {currentItem.ingredients.map((ingredient, index) => (
-                  <div key={ingredient.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-gray-900">Ingredient {index + 1}</h3>
-                      <button
-                        onClick={() => removeIngredient(ingredient.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Name
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={ingredient.name}
-                          onChange={(e) => updateIngredient(ingredient.id, 'name', e.target.value)}
-                          placeholder="e.g., Chicken Breast"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Unit
-                        </label>
-                        <select
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={ingredient.unit}
-                          onChange={(e) => updateIngredient(ingredient.id, 'unit', e.target.value)}
-                        >
-                          <option value="kg">kg</option>
-                          <option value="g">g</option>
-                          <option value="liter">liter</option>
-                          <option value="ml">ml</option>
-                          <option value="piece">piece</option>
-                          <option value="cup">cup</option>
-                          <option value="tbsp">tbsp</option>
-                          <option value="tsp">tsp</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Purchase Price (£)
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={ingredient.purchasePrice}
-                          onChange={(e) => updateIngredient(ingredient.id, 'purchasePrice', parseFloat(e.target.value) || 0)}
-                          placeholder="0.00"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Quantity Used
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={ingredient.quantityUsed}
-                          onChange={(e) => updateIngredient(ingredient.id, 'quantityUsed', parseFloat(e.target.value) || 0)}
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </div>
+                {ingredients.length > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      ✓ {ingredients.length} ingredients loaded
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
-            {/* Add Menu Item Button */}
-            <button
-              onClick={addMenuItem}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center space-x-2"
-              disabled={!currentItem.name || currentItem.sellingPrice <= 0 || currentItem.ingredients.length === 0}
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Menu Item</span>
-            </button>
+            {/* Menu Items Upload */}
+            <div className="bg-white rounded-lg shadow-md border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                  <FileText className="h-5 w-5" />
+                  <span>Menu Items Data</span>
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Upload CSV with: Name, Selling Price, Ingredient1, Qty1, Ingredient2, Qty2...
+                </p>
+              </div>
+              <div className="px-6 py-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleMenuUpload}
+                    className="hidden"
+                    id="menu-upload"
+                  />
+                  <label
+                    htmlFor="menu-upload"
+                    className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
+                  >
+                    Upload Menu CSV
+                  </label>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Example: Pizza, £12.00, Cheese, 2, Flour, 0.5
+                  </p>
+                </div>
+                {menuItems.length > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      ✓ {menuItems.length} menu items loaded
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
+          {/* Status and Calculate Button */}
+          {uploadStatus.type && (
+            <div className={`p-4 rounded-lg flex items-center space-x-2 ${
+              uploadStatus.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+            }`}>
+              {uploadStatus.type === 'success' ? (
+                <CheckCircle className="h-5 w-5" />
+              ) : (
+                <AlertCircle className="h-5 w-5" />
+              )}
+              <span>{uploadStatus.message}</span>
+            </div>
+          )}
+
+          {ingredients.length > 0 && menuItems.length > 0 && (
+            <div className="text-center">
+              <button
+                onClick={calculateFoodCosts}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center space-x-2 mx-auto"
+              >
+                <Calculator className="h-5 w-5" />
+                <span>Calculate Food Costs</span>
+              </button>
+            </div>
+          )}
+
           {/* Results Section */}
-          <div className="space-y-6">
-            {/* Summary Stats */}
-            {menuItems.length > 0 && (
+          {isCalculated && calculatedItems.length > 0 && (
+            <div className="space-y-6">
+              {/* Summary */}
               <div className="bg-white rounded-lg shadow-md border border-gray-200">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
+                    <button
+                      onClick={downloadResults}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Download Results</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="px-6 py-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {formatCurrency(totalRevenue)}
+                        £{totalRevenue.toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500">Total Revenue</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-red-600">
-                        {formatCurrency(totalFoodCosts)}
+                        £{totalFoodCosts.toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500">Total Food Costs</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {formatCurrency(overallGrossProfit)}
+                        £{overallGrossProfit.toFixed(2)}
                       </div>
                       <div className="text-sm text-gray-500">Gross Profit</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-yellow-600">
-                        {formatPercentage(overallGrossProfitPercentage)}
+                        {overallGPPercentage.toFixed(2)}%
                       </div>
                       <div className="text-sm text-gray-500">GP Percentage</div>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Menu Items List */}
-            {menuItems.map((item) => (
-              <div key={item.id} className="bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                  <div className="text-sm text-gray-500">
-                    Selling Price: {formatCurrency(item.sellingPrice)}
-                  </div>
-                </div>
-                <div className="px-6 py-4 space-y-4">
-                  {/* Summary Stats */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-red-600">
-                        {formatCurrency(item.totalFoodCost)}
+              {/* Menu Items Breakdown */}
+              <div className="space-y-4">
+                {calculatedItems.map((item, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-md border border-gray-200">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
+                      <div className="text-sm text-gray-500">
+                        Selling Price: £{item.sellingPrice.toFixed(2)}
                       </div>
-                      <div className="text-xs text-gray-500">Food Cost</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-green-600">
-                        {formatCurrency(item.grossProfit)}
+                    <div className="px-6 py-4 space-y-4">
+                      {/* Summary Stats */}
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-red-600">
+                            £{item.totalFoodCost.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500">Food Cost</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-green-600">
+                            £{item.grossProfit.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500">Gross Profit</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-yellow-600">
+                            {item.grossProfitPercentage.toFixed(2)}%
+                          </div>
+                          <div className="text-xs text-gray-500">GP %</div>
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">Gross Profit</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-yellow-600">
-                        {formatPercentage(item.grossProfitPercentage)}
-                      </div>
-                      <div className="text-xs text-gray-500">GP %</div>
-                    </div>
-                  </div>
 
-                  {/* Ingredient Breakdown */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Ingredient Breakdown</h4>
-                    <div className="space-y-2">
-                      {item.ingredients.map((ingredient, index) => {
-                        const cost = ingredient.purchasePrice * ingredient.quantityUsed;
-                        const percentage = item.totalFoodCost > 0 ? (cost / item.totalFoodCost) * 100 : 0;
-                        return (
-                          <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
-                            <div>
-                              <div className="font-medium text-gray-900">{ingredient.name}</div>
-                              <div className="text-sm text-gray-500">
-                                {ingredient.quantityUsed} {ingredient.unit} @ {formatCurrency(ingredient.purchasePrice)}/{ingredient.unit}
+                      {/* Ingredient Breakdown */}
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">Ingredient Breakdown</h4>
+                        <div className="space-y-2">
+                          {item.ingredientBreakdown.map((breakdown, idx) => (
+                            <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100">
+                              <div className="font-medium text-gray-900">{breakdown.ingredient}</div>
+                              <div className="text-right">
+                                <div className="font-medium text-gray-900">£{breakdown.cost.toFixed(2)}</div>
+                                <div className="text-sm text-gray-500">{breakdown.percentage.toFixed(1)}%</div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-medium text-gray-900">{formatCurrency(cost)}</div>
-                              <div className="text-sm text-gray-500">{formatPercentage(percentage)}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-
-            {menuItems.length === 0 && (
-              <div className="bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="px-6 py-12 text-center">
-                  <Calculator className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Calculate</h3>
-                  <p className="text-gray-500">
-                    Add menu items to see your food cost breakdown.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

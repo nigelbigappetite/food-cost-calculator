@@ -1,18 +1,19 @@
 # Food Cost Calculator
 
-A comprehensive food cost breakdown calculator for Hungry Tummy Brands, designed to calculate food costs, gross profit percentages, and ingredient breakdowns for restaurant menu items.
+A comprehensive food cost breakdown calculator for Hungry Tum Brands, designed to calculate food costs, gross profit percentages, and ingredient breakdowns for restaurant menu items using CSV data ingestion.
 
 ## Features
 
-- **Menu Item Management**: Add and manage menu items with selling prices
-- **Ingredient Tracking**: Track ingredients with purchase prices, units, and quantities used
-- **Customization Support**: Add customizations with additional costs and ingredients
+- **CSV Data Import**: Upload ingredients and menu data via CSV files
+- **Smart Ingredient Matching**: Automatically matches menu ingredients with your ingredient database
+- **Accurate Cost Calculations**: Calculates cost per unit from bulk purchases (e.g., 112 slices of cheese at £10 = £0.089 per slice)
 - **Real-time Calculations**: Automatic calculation of:
   - Total food cost per menu item
   - Gross profit (£) per menu item
   - Gross profit percentage (%) per menu item
   - Brand-wide totals and averages
 - **Detailed Breakdowns**: View ingredient costs and percentages of total food cost
+- **Export Results**: Download calculated results as CSV
 - **Modern UI**: Clean, responsive interface built with Tailwind CSS
 
 ## Getting Started
@@ -51,19 +52,39 @@ vercel
 
 ## How to Use
 
-### Adding a Brand
-1. Enter the brand name in the "Brand Information" section
+### Step 1: Prepare Your Data Files
 
-### Adding Menu Items
-1. Enter the menu item name and selling price
-2. Add ingredients with their purchase prices, units, and quantities used
-3. Optionally add customizations with additional costs
-4. Click "Add Menu Item" to save
+**Ingredients CSV Format:**
+```csv
+Name,Purchase Price,Quantity,Unit
+Cheese,10.00,112,slices
+Chicken Breast,15.00,2,kg
+Flour,2.50,5,kg
+```
 
-### Calculating Results
-1. Add one or more menu items
-2. Click "Calculate Results" to see the breakdown
-3. View detailed ingredient costs, gross profits, and percentages
+**Menu Items CSV Format:**
+```csv
+Name,Selling Price,Cheese (slices),Qty,Flour (kg),Qty,Chicken Breast (kg),Qty
+Margherita Pizza,12.00,Cheese,3,Flour,0.3,Chicken Breast,0
+Chicken Pizza,15.00,Cheese,3,Flour,0.3,Chicken Breast,0.2
+```
+
+### Step 2: Upload Your Data
+1. Upload your ingredients CSV file
+2. Upload your menu items CSV file
+3. The system will automatically validate and load your data
+
+### Step 3: Calculate Food Costs
+1. Click "Calculate Food Costs" to process all menu items
+2. View detailed breakdowns for each menu item
+3. See brand-wide summary statistics
+4. Download results as CSV for further analysis
+
+### Step 4: Analyze Results
+- **Food Cost per Item**: Exact cost based on ingredient usage
+- **Gross Profit**: Selling price minus food cost
+- **GP Percentage**: Profit margin as a percentage
+- **Ingredient Breakdown**: Cost and percentage of each ingredient
 
 ## Example Usage
 
