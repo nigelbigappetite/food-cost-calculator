@@ -41,6 +41,39 @@ interface CalculatedMenuItem extends MenuItem {
   }[];
 }
 
+interface ItemVariant {
+  id: string;
+  baseItemName: string;
+  variantName: string;
+  sellingPrice: number;
+  foodCost: number;
+  grossProfit: number;
+  grossProfitPercentage: number;
+}
+
+interface FlexibleMealDeal {
+  id: string;
+  name: string;
+  sellingPrice: number;
+  components: {
+    category: 'main' | 'side' | 'drink';
+    itemType: string;
+    isFlexible: boolean;
+    specificItem?: string;
+  }[];
+  totalFoodCost: number;
+  grossProfit: number;
+  grossProfitPercentage: number;
+  componentBreakdown: {
+    category: string;
+    itemType: string;
+    isFlexible: boolean;
+    averageCost: number;
+    individualCosts: number[];
+    individualSellingPrices: number[];
+  }[];
+}
+
 interface MealDeal {
   id: string;
   name: string;
@@ -64,8 +97,11 @@ export default function Home() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [calculatedItems, setCalculatedItems] = useState<CalculatedMenuItem[]>([]);
+  const [itemVariants, setItemVariants] = useState<ItemVariant[]>([]);
   const [mealDeals, setMealDeals] = useState<MealDeal[]>([]);
+  const [flexibleMealDeals, setFlexibleMealDeals] = useState<FlexibleMealDeal[]>([]);
   const [calculatedMealDeals, setCalculatedMealDeals] = useState<MealDeal[]>([]);
+  const [calculatedFlexibleMealDeals, setCalculatedFlexibleMealDeals] = useState<FlexibleMealDeal[]>([]);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
   const [isCalculated, setIsCalculated] = useState(false);
 
@@ -222,6 +258,136 @@ export default function Home() {
     reader.readAsText(file);
   }, []);
 
+  const handleItemVariantsUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target?.result as string;
+        const rows = parseCSV(csvText);
+        
+        if (rows.length < 2) {
+          setUploadStatus({ type: 'error', message: 'CSV must have at least a header row and one data row' });
+          return;
+        }
+
+        const header = rows[0].map(h => h.toLowerCase().trim());
+        const expectedHeaders = ['base item name', 'variant name', 'selling price'];
+        
+        if (!expectedHeaders.every(expected => 
+          header.some(h => h.includes(expected.replace(' ', '')) || h === expected)
+        )) {
+          setUploadStatus({ 
+            type: 'error', 
+            message: 'CSV must have columns: Base Item Name, Variant Name, Selling Price' 
+          });
+          return;
+        }
+
+        const newVariants: ItemVariant[] = rows.slice(1).map((row, index) => {
+          const baseItemName = row[0]?.trim() || '';
+          const variantName = row[1]?.trim() || '';
+          const sellingPrice = parseFloat(row[2]?.replace(/[£$]/g, '') || '0');
+
+          return {
+            id: `variant-${index}`,
+            baseItemName,
+            variantName,
+            sellingPrice,
+            foodCost: 0, // Will be calculated
+            grossProfit: 0,
+            grossProfitPercentage: 0
+          };
+        }).filter(variant => variant.baseItemName && variant.variantName && variant.sellingPrice > 0);
+
+        setItemVariants(newVariants);
+        setUploadStatus({ 
+          type: 'success', 
+          message: `Successfully loaded ${newVariants.length} item variants` 
+        });
+      } catch (error) {
+        setUploadStatus({ type: 'error', message: 'Error parsing CSV file' });
+      }
+    };
+    reader.readAsText(file);
+  }, []);
+
+  const handleFlexibleMealDealUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target?.result as string;
+        const rows = parseCSV(csvText);
+        
+        if (rows.length < 2) {
+          setUploadStatus({ type: 'error', message: 'CSV must have at least a header row and one data row' });
+          return;
+        }
+
+        const header = rows[0].map(h => h.toLowerCase().trim());
+        const expectedHeaders = ['name', 'selling price'];
+        
+        if (!expectedHeaders.every(expected => 
+          header.some(h => h.includes(expected.replace(' ', '')) || h === expected)
+        )) {
+          setUploadStatus({ 
+            type: 'error', 
+            message: 'CSV must have columns: Name, Selling Price, and component columns' 
+          });
+          return;
+        }
+
+        const newFlexibleMealDeals: FlexibleMealDeal[] = rows.slice(1).map((row, index) => {
+          const name = row[0]?.trim() || '';
+          const sellingPrice = parseFloat(row[1]?.replace(/[£$]/g, '') || '0');
+          
+          // Extract components from remaining columns
+          const components: { category: 'main' | 'side' | 'drink'; itemType: string; isFlexible: boolean; specificItem?: string }[] = [];
+          
+          for (let i = 2; i < row.length; i += 3) {
+            const itemType = row[i]?.trim();
+            const category = row[i + 1]?.trim().toLowerCase() as 'main' | 'side' | 'drink';
+            const isFlexible = row[i + 2]?.trim().toLowerCase() === 'true' || row[i + 2]?.trim().toLowerCase() === 'flexible';
+            
+            if (itemType && category && ['main', 'side', 'drink'].includes(category)) {
+              components.push({
+                category,
+                itemType,
+                isFlexible,
+                specificItem: isFlexible ? undefined : itemType
+              });
+            }
+          }
+
+          return {
+            id: `flexible-meal-deal-${index}`,
+            name,
+            sellingPrice,
+            components,
+            totalFoodCost: 0,
+            grossProfit: 0,
+            grossProfitPercentage: 0,
+            componentBreakdown: []
+          };
+        }).filter(deal => deal.name && deal.sellingPrice > 0 && deal.components.length > 0);
+
+        setFlexibleMealDeals(newFlexibleMealDeals);
+        setUploadStatus({ 
+          type: 'success', 
+          message: `Successfully loaded ${newFlexibleMealDeals.length} flexible meal deals` 
+        });
+      } catch (error) {
+        setUploadStatus({ type: 'error', message: 'Error parsing CSV file' });
+      }
+    };
+    reader.readAsText(file);
+  }, []);
+
   const handleMealDealUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -366,6 +532,30 @@ export default function Home() {
 
     setCalculatedItems(calculated);
 
+    // Calculate item variants if they exist
+    if (itemVariants.length > 0) {
+      const calculatedVariants: ItemVariant[] = itemVariants.map(variant => {
+        // Find the base menu item to get its food cost
+        const baseItem = calculated.find(item => 
+          item.name.toLowerCase().includes(variant.baseItemName.toLowerCase()) ||
+          variant.baseItemName.toLowerCase().includes(item.name.toLowerCase())
+        );
+
+        const foodCost = baseItem ? baseItem.totalFoodCost : 0;
+        const grossProfit = variant.sellingPrice - foodCost;
+        const grossProfitPercentage = variant.sellingPrice > 0 ? (grossProfit / variant.sellingPrice) * 100 : 0;
+
+        return {
+          ...variant,
+          foodCost,
+          grossProfit,
+          grossProfitPercentage
+        };
+      });
+
+      setItemVariants(calculatedVariants);
+    }
+
     // Calculate meal deals if they exist
     if (mealDeals.length > 0) {
       const calculatedMealDeals: MealDeal[] = mealDeals.map(deal => {
@@ -413,6 +603,89 @@ export default function Home() {
       setCalculatedMealDeals(calculatedMealDeals);
     }
 
+    // Calculate flexible meal deals if they exist
+    if (flexibleMealDeals.length > 0) {
+      const calculatedFlexibleMealDeals: FlexibleMealDeal[] = flexibleMealDeals.map(deal => {
+        let totalFoodCost = 0;
+        const componentBreakdown: { category: string; itemType: string; isFlexible: boolean; averageCost: number; individualCosts: number[]; individualSellingPrices: number[] }[] = [];
+
+        deal.components.forEach(component => {
+          if (component.isFlexible) {
+            // Find all items of this type and calculate average
+            const matchingItems = calculated.filter(item => 
+              item.name.toLowerCase().includes(component.itemType.toLowerCase()) ||
+              component.itemType.toLowerCase().includes(item.name.toLowerCase())
+            );
+
+            if (matchingItems.length > 0) {
+              const individualCosts = matchingItems.map(item => item.totalFoodCost);
+              const individualSellingPrices = matchingItems.map(item => item.sellingPrice);
+              const averageCost = individualCosts.reduce((sum, cost) => sum + cost, 0) / individualCosts.length;
+              
+              totalFoodCost += averageCost;
+              componentBreakdown.push({
+                category: component.category,
+                itemType: component.itemType,
+                isFlexible: true,
+                averageCost,
+                individualCosts,
+                individualSellingPrices
+              });
+            } else {
+              componentBreakdown.push({
+                category: component.category,
+                itemType: component.itemType,
+                isFlexible: true,
+                averageCost: 0,
+                individualCosts: [],
+                individualSellingPrices: []
+              });
+            }
+          } else {
+            // Specific item - find exact match
+            const matchingItem = calculated.find(item => 
+              item.name.toLowerCase().includes(component.specificItem?.toLowerCase() || '') ||
+              component.specificItem?.toLowerCase().includes(item.name.toLowerCase())
+            );
+
+            if (matchingItem) {
+              totalFoodCost += matchingItem.totalFoodCost;
+              componentBreakdown.push({
+                category: component.category,
+                itemType: component.itemType,
+                isFlexible: false,
+                averageCost: matchingItem.totalFoodCost,
+                individualCosts: [matchingItem.totalFoodCost],
+                individualSellingPrices: [matchingItem.sellingPrice]
+              });
+            } else {
+              componentBreakdown.push({
+                category: component.category,
+                itemType: component.itemType,
+                isFlexible: false,
+                averageCost: 0,
+                individualCosts: [],
+                individualSellingPrices: []
+              });
+            }
+          }
+        });
+
+        const grossProfit = deal.sellingPrice - totalFoodCost;
+        const grossProfitPercentage = deal.sellingPrice > 0 ? (grossProfit / deal.sellingPrice) * 100 : 0;
+
+        return {
+          ...deal,
+          totalFoodCost,
+          grossProfit,
+          grossProfitPercentage,
+          componentBreakdown
+        };
+      });
+
+      setCalculatedFlexibleMealDeals(calculatedFlexibleMealDeals);
+    }
+
     setIsCalculated(true);
     setUploadStatus({ 
       type: 'success', 
@@ -442,7 +715,7 @@ export default function Home() {
     window.URL.revokeObjectURL(url);
   };
 
-  const downloadTemplate = (type: 'ingredients' | 'menu' | 'meal-deals') => {
+  const downloadTemplate = (type: 'ingredients' | 'menu' | 'meal-deals' | 'item-variants' | 'flexible-meal-deals') => {
     let csvContent = '';
     let filename = '';
     
@@ -469,6 +742,29 @@ export default function Home() {
         ['Chicken Wings', '8.50', 'Cheese', '0', 'Flour', '0', 'Chicken Breast', '0.5', 'Tomato Sauce', '0', 'Olive Oil', '0.05', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.02', 'Onions', '0', 'Mushrooms', '0']
       ].map(row => row.join(',')).join('\n');
       filename = 'menu-template.csv';
+    } else if (type === 'item-variants') {
+      csvContent = [
+        ['Base Item Name', 'Variant Name', 'Selling Price'],
+        ['Chicken Wings', 'BBQ Wings', '8.50'],
+        ['Chicken Wings', 'Buffalo Wings', '8.50'],
+        ['Chicken Wings', 'Teriyaki Wings', '9.00'],
+        ['Fries', 'Regular Fries', '3.50'],
+        ['Fries', 'Loaded Fries', '6.50'],
+        ['Drink', 'Coke', '2.50'],
+        ['Drink', 'Pepsi', '2.50']
+      ].map(row => row.join(',')).join('\n');
+      filename = 'item-variants-template.csv';
+    } else if (type === 'flexible-meal-deals') {
+      csvContent = [
+        ['Name', 'Selling Price', 'Item Type', 'Category', 'Is Flexible'],
+        ['Any Wings Meal Deal', '8.99', 'Wings', 'main', 'true'],
+        ['Any Side', '', 'side', 'side', 'true'],
+        ['Any Drink', '', 'drink', 'drink', 'true'],
+        ['Premium Meal Deal', '12.99', 'Chicken Pizza', 'main', 'false'],
+        ['Any Side', '', 'side', 'side', 'true'],
+        ['Milkshake', '', 'drink', 'drink', 'false']
+      ].map(row => row.join(',')).join('\n');
+      filename = 'flexible-meal-deals-template.csv';
     } else {
       csvContent = [
         ['Name', 'Selling Price', 'Main Item', 'Category', 'Side Item', 'Category', 'Drink Item', 'Category'],

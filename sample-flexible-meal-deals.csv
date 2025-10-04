@@ -1,0 +1,10 @@
+Name,Selling Price,Item Type,Category,Is Flexible
+Any Wings Meal Deal,8.99,Wings,main,true
+Any Side,side,side,true
+Any Drink,drink,drink,true
+Premium Meal Deal,12.99,Chicken Pizza,main,false
+Any Side,side,side,true
+Milkshake,drink,drink,false
+Veggie Meal Deal,7.99,Margherita Pizza,main,false
+Salad,side,side,false
+Water,drink,drink,false

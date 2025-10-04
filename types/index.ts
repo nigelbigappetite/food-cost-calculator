@@ -35,6 +35,39 @@ export interface Brand {
   overallGrossProfitPercentage: number; // Calculated
 }
 
+export interface ItemVariant {
+  id: string;
+  baseItemName: string;
+  variantName: string;
+  sellingPrice: number;
+  foodCost: number; // Calculated from ingredients
+  grossProfit: number; // Calculated
+  grossProfitPercentage: number; // Calculated
+}
+
+export interface FlexibleMealDeal {
+  id: string;
+  name: string;
+  sellingPrice: number;
+  components: {
+    category: 'main' | 'side' | 'drink';
+    itemType: string; // e.g., "Wings", "Fries", "Drink"
+    isFlexible: boolean; // true for "any side", "any flavor"
+    specificItem?: string; // if not flexible, specific item name
+  }[];
+  totalFoodCost: number; // Calculated (average if flexible)
+  grossProfit: number; // Calculated
+  grossProfitPercentage: number; // Calculated
+  componentBreakdown: {
+    category: string;
+    itemType: string;
+    isFlexible: boolean;
+    averageCost: number;
+    individualCosts: number[];
+    individualSellingPrices: number[];
+  }[];
+}
+
 export interface MealDeal {
   id: string;
   name: string;
