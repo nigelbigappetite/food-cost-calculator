@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Upload, FileText, Calculator, ChefHat, Download, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, FileText, Calculator, ChefHat, Download, AlertCircle, CheckCircle, Package } from 'lucide-react';
 
 interface Ingredient {
   name: string;
@@ -41,10 +41,31 @@ interface CalculatedMenuItem extends MenuItem {
   }[];
 }
 
+interface MealDeal {
+  id: string;
+  name: string;
+  sellingPrice: number;
+  components: {
+    itemName: string;
+    category: 'main' | 'side' | 'drink';
+  }[];
+  totalFoodCost: number;
+  grossProfit: number;
+  grossProfitPercentage: number;
+  componentBreakdown: {
+    itemName: string;
+    category: string;
+    individualCost: number;
+    individualSellingPrice: number;
+  }[];
+}
+
 export default function Home() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [calculatedItems, setCalculatedItems] = useState<CalculatedMenuItem[]>([]);
+  const [mealDeals, setMealDeals] = useState<MealDeal[]>([]);
+  const [calculatedMealDeals, setCalculatedMealDeals] = useState<MealDeal[]>([]);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
   const [isCalculated, setIsCalculated] = useState(false);
 
@@ -201,6 +222,77 @@ export default function Home() {
     reader.readAsText(file);
   }, []);
 
+  const handleMealDealUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target?.result as string;
+        const rows = parseCSV(csvText);
+        
+        if (rows.length < 2) {
+          setUploadStatus({ type: 'error', message: 'CSV must have at least a header row and one data row' });
+          return;
+        }
+
+        const header = rows[0].map(h => h.toLowerCase().trim());
+        const expectedHeaders = ['name', 'selling price'];
+        
+        if (!expectedHeaders.every(expected => 
+          header.some(h => h.includes(expected.replace(' ', '')) || h === expected)
+        )) {
+          setUploadStatus({ 
+            type: 'error', 
+            message: 'CSV must have columns: Name, Selling Price, and component columns' 
+          });
+          return;
+        }
+
+        const newMealDeals: MealDeal[] = rows.slice(1).map((row, index) => {
+          const name = row[0]?.trim() || '';
+          const sellingPrice = parseFloat(row[1]?.replace(/[£$]/g, '') || '0');
+          
+          // Extract components from remaining columns (Main, Side, Drink)
+          const components: { itemName: string; category: 'main' | 'side' | 'drink' }[] = [];
+          
+          for (let i = 2; i < row.length; i += 2) {
+            const itemName = row[i]?.trim();
+            const category = row[i + 1]?.trim().toLowerCase() as 'main' | 'side' | 'drink';
+            
+            if (itemName && category && ['main', 'side', 'drink'].includes(category)) {
+              components.push({
+                itemName,
+                category
+              });
+            }
+          }
+
+          return {
+            id: `meal-deal-${index}`,
+            name,
+            sellingPrice,
+            components,
+            totalFoodCost: 0,
+            grossProfit: 0,
+            grossProfitPercentage: 0,
+            componentBreakdown: []
+          };
+        }).filter(deal => deal.name && deal.sellingPrice > 0 && deal.components.length > 0);
+
+        setMealDeals(newMealDeals);
+        setUploadStatus({ 
+          type: 'success', 
+          message: `Successfully loaded ${newMealDeals.length} meal deals` 
+        });
+      } catch (error) {
+        setUploadStatus({ type: 'error', message: 'Error parsing CSV file' });
+      }
+    };
+    reader.readAsText(file);
+  }, []);
+
   const calculateFoodCosts = () => {
     if (ingredients.length === 0 || menuItems.length === 0) {
       setUploadStatus({ 
@@ -273,10 +365,58 @@ export default function Home() {
     });
 
     setCalculatedItems(calculated);
+
+    // Calculate meal deals if they exist
+    if (mealDeals.length > 0) {
+      const calculatedMealDeals: MealDeal[] = mealDeals.map(deal => {
+        let totalFoodCost = 0;
+        const componentBreakdown: { itemName: string; category: string; individualCost: number; individualSellingPrice: number }[] = [];
+
+        deal.components.forEach(component => {
+          // Find the individual menu item
+          const matchingItem = calculated.find(item => 
+            item.name.toLowerCase().includes(component.itemName.toLowerCase()) ||
+            component.itemName.toLowerCase().includes(item.name.toLowerCase())
+          );
+
+          if (matchingItem) {
+            totalFoodCost += matchingItem.totalFoodCost;
+            componentBreakdown.push({
+              itemName: component.itemName,
+              category: component.category,
+              individualCost: matchingItem.totalFoodCost,
+              individualSellingPrice: matchingItem.sellingPrice
+            });
+          } else {
+            // Item not found in menu
+            componentBreakdown.push({
+              itemName: `${component.itemName} (not found)`,
+              category: component.category,
+              individualCost: 0,
+              individualSellingPrice: 0
+            });
+          }
+        });
+
+        const grossProfit = deal.sellingPrice - totalFoodCost;
+        const grossProfitPercentage = deal.sellingPrice > 0 ? (grossProfit / deal.sellingPrice) * 100 : 0;
+
+        return {
+          ...deal,
+          totalFoodCost,
+          grossProfit,
+          grossProfitPercentage,
+          componentBreakdown
+        };
+      });
+
+      setCalculatedMealDeals(calculatedMealDeals);
+    }
+
     setIsCalculated(true);
     setUploadStatus({ 
       type: 'success', 
-      message: `Calculated food costs for ${calculated.length} menu items` 
+      message: `Calculated food costs for ${calculated.length} menu items${mealDeals.length > 0 ? ` and ${mealDeals.length} meal deals` : ''}` 
     });
   };
 
@@ -302,7 +442,7 @@ export default function Home() {
     window.URL.revokeObjectURL(url);
   };
 
-  const downloadTemplate = (type: 'ingredients' | 'menu') => {
+  const downloadTemplate = (type: 'ingredients' | 'menu' | 'meal-deals') => {
     let csvContent = '';
     let filename = '';
     
@@ -321,7 +461,7 @@ export default function Home() {
         ['Mushrooms', '4.00', '1', 'kg']
       ].map(row => row.join(',')).join('\n');
       filename = 'ingredients-template.csv';
-    } else {
+    } else if (type === 'menu') {
       csvContent = [
         ['Name', 'Selling Price', 'Cheese', 'Qty', 'Flour', 'Qty', 'Chicken Breast', 'Qty', 'Tomato Sauce', 'Qty', 'Olive Oil', 'Qty', 'Salt', 'Qty', 'Pepper', 'Qty', 'Garlic', 'Qty', 'Onions', 'Qty', 'Mushrooms', 'Qty'],
         ['Margherita Pizza', '12.00', 'Cheese', '3', 'Flour', '0.3', 'Chicken Breast', '0', 'Tomato Sauce', '0.1', 'Olive Oil', '0.02', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.01', 'Onions', '0.05', 'Mushrooms', '0'],
@@ -329,6 +469,14 @@ export default function Home() {
         ['Chicken Wings', '8.50', 'Cheese', '0', 'Flour', '0', 'Chicken Breast', '0.5', 'Tomato Sauce', '0', 'Olive Oil', '0.05', 'Salt', '0.01', 'Pepper', '0.01', 'Garlic', '0.02', 'Onions', '0', 'Mushrooms', '0']
       ].map(row => row.join(',')).join('\n');
       filename = 'menu-template.csv';
+    } else {
+      csvContent = [
+        ['Name', 'Selling Price', 'Main Item', 'Category', 'Side Item', 'Category', 'Drink Item', 'Category'],
+        ['Classic Meal Deal', '8.99', 'Chicken Burger', 'main', 'Fries', 'side', 'Coke', 'drink'],
+        ['Premium Meal Deal', '12.99', 'Chicken Pizza', 'main', 'Loaded Fries', 'side', 'Milkshake', 'drink'],
+        ['Veggie Meal Deal', '7.99', 'Margherita Pizza', 'main', 'Salad', 'side', 'Water', 'drink']
+      ].map(row => row.join(',')).join('\n');
+      filename = 'meal-deals-template.csv';
     }
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -365,7 +513,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
           {/* Upload Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Ingredients Upload */}
             <div className="bg-white rounded-lg shadow-md border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -465,6 +613,56 @@ export default function Home() {
                 )}
               </div>
             </div>
+
+            {/* Meal Deals Upload */}
+            <div className="bg-white rounded-lg shadow-md border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                  <Package className="h-5 w-5" />
+                  <span>Meal Deals Data</span>
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Upload CSV with: Name, Selling Price, Main Item, Category, Side Item, Category, Drink Item, Category
+                </p>
+              </div>
+              <div className="px-6 py-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleMealDealUpload}
+                    className="hidden"
+                    id="meal-deals-upload"
+                  />
+                  <div className="space-y-3">
+                    <label
+                      htmlFor="meal-deals-upload"
+                      className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
+                    >
+                      Upload Meal Deals CSV
+                    </label>
+                    <div className="text-sm text-gray-500">or</div>
+                    <button
+                      onClick={() => downloadTemplate('meal-deals')}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 inline-block"
+                    >
+                      Download Template
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Example: Classic Meal Deal, £8.99, Chicken Burger, main, Fries, side, Coke, drink
+                  </p>
+                </div>
+                {mealDeals.length > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      ✓ {mealDeals.length} meal deals loaded
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Status and Calculate Button */}
@@ -540,8 +738,68 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Meal Deals Breakdown */}
+              {calculatedMealDeals.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Meal Deals Analysis</h3>
+                  {calculatedMealDeals.map((deal, index) => (
+                    <div key={index} className="bg-white rounded-lg shadow-md border border-gray-200">
+                      <div className="px-6 py-4 border-b border-gray-200">
+                        <h4 className="text-lg font-semibold text-gray-900">{deal.name}</h4>
+                        <div className="text-sm text-gray-500">
+                          Selling Price: £{deal.sellingPrice.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="px-6 py-4 space-y-4">
+                        {/* Summary Stats */}
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <div className="text-lg font-semibold text-red-600">
+                              £{deal.totalFoodCost.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">Total Food Cost</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-semibold text-green-600">
+                              £{deal.grossProfit.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">Gross Profit</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-semibold text-yellow-600">
+                              {deal.grossProfitPercentage.toFixed(2)}%
+                            </div>
+                            <div className="text-xs text-gray-500">GP %</div>
+                          </div>
+                        </div>
+
+                        {/* Component Breakdown */}
+                        <div>
+                          <h5 className="font-medium text-gray-900 mb-2">Component Breakdown</h5>
+                          <div className="space-y-2">
+                            {deal.componentBreakdown.map((component, idx) => (
+                              <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100">
+                                <div>
+                                  <div className="font-medium text-gray-900">{component.itemName}</div>
+                                  <div className="text-sm text-gray-500 capitalize">{component.category}</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-medium text-gray-900">£{component.individualCost.toFixed(2)}</div>
+                                  <div className="text-sm text-gray-500">Individual: £{component.individualSellingPrice.toFixed(2)}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Menu Items Breakdown */}
               <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Individual Menu Items</h3>
                 {calculatedItems.map((item, index) => (
                   <div key={index} className="bg-white rounded-lg shadow-md border border-gray-200">
                     <div className="px-6 py-4 border-b border-gray-200">

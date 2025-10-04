@@ -35,6 +35,25 @@ export interface Brand {
   overallGrossProfitPercentage: number; // Calculated
 }
 
+export interface MealDeal {
+  id: string;
+  name: string;
+  sellingPrice: number;
+  components: {
+    itemName: string;
+    category: 'main' | 'side' | 'drink';
+  }[];
+  totalFoodCost: number; // Calculated
+  grossProfit: number; // Calculated
+  grossProfitPercentage: number; // Calculated
+  componentBreakdown: {
+    itemName: string;
+    category: string;
+    individualCost: number;
+    individualSellingPrice: number;
+  }[];
+}
+
 export interface CalculationResult {
   menuItem: MenuItem;
   ingredientBreakdown: {
