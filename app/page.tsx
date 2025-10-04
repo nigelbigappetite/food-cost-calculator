@@ -126,7 +126,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-3">
-              <ChefHat className="h-8 w-8 text-primary-600" />
+              <ChefHat className="h-8 w-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-900">Food Cost Calculator</h1>
             </div>
             <div className="text-sm text-gray-500">
@@ -218,7 +218,7 @@ export default function Home() {
                       <h3 className="font-medium text-gray-900">Ingredient {index + 1}</h3>
                       <button
                         onClick={() => removeIngredient(ingredient.id)}
-                        className="text-danger-600 hover:text-danger-700"
+                        className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -308,7 +308,7 @@ export default function Home() {
                       <h3 className="font-medium text-gray-900">Customization {index + 1}</h3>
                       <button
                         onClick={() => removeCustomization(customization.id)}
-                        className="text-danger-600 hover:text-danger-700"
+                        className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -378,25 +378,25 @@ export default function Home() {
                   <div className="card-body">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-primary-600">
+                        <div className="text-2xl font-bold text-blue-600">
                           {formatCurrency(calculatedBrand.totalRevenue)}
                         </div>
                         <div className="text-sm text-gray-500">Total Revenue</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-danger-600">
+                        <div className="text-2xl font-bold text-red-600">
                           {formatCurrency(calculatedBrand.totalFoodCosts)}
                         </div>
                         <div className="text-sm text-gray-500">Total Food Costs</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-success-600">
+                        <div className="text-2xl font-bold text-green-600">
                           {formatCurrency(calculatedBrand.overallGrossProfit)}
                         </div>
                         <div className="text-sm text-gray-500">Gross Profit</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-warning-600">
+                        <div className="text-2xl font-bold text-yellow-600">
                           {formatPercentage(calculatedBrand.overallGrossProfitPercentage)}
                         </div>
                         <div className="text-sm text-gray-500">GP Percentage</div>
@@ -420,19 +420,19 @@ export default function Home() {
                         {/* Summary Stats */}
                         <div className="grid grid-cols-3 gap-4">
                           <div className="text-center">
-                            <div className="text-lg font-semibold text-danger-600">
+                            <div className="text-lg font-semibold text-red-600">
                               {formatCurrency(menuItem.totalFoodCost)}
                             </div>
                             <div className="text-xs text-gray-500">Food Cost</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-semibold text-success-600">
+                            <div className="text-lg font-semibold text-green-600">
                               {formatCurrency(menuItem.grossProfit)}
                             </div>
                             <div className="text-xs text-gray-500">Gross Profit</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-semibold text-warning-600">
+                            <div className="text-lg font-semibold text-yellow-600">
                               {formatPercentage(menuItem.grossProfitPercentage)}
                             </div>
                             <div className="text-xs text-gray-500">GP %</div>
