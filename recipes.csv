@@ -1,0 +1,9 @@
+Menu Item,Brand,Category,Ingredients (qty+unit)
+Margherita Pizza,Big Appetite,main,cheese:3 slices;flour:0.3 kg;tomato sauce:0.1 liter;olive oil:0.02 liter;salt:0.01 kg;pepper:0.01 kg;garlic:0.01 kg;onions:0.05 kg
+Chicken Pizza,Big Appetite,main,cheese:3 slices;flour:0.3 kg;chicken breast:0.2 kg;tomato sauce:0.1 liter;olive oil:0.02 liter;salt:0.01 kg;pepper:0.01 kg;garlic:0.01 kg;onions:0.05 kg
+Mushroom Pizza,Big Appetite,main,cheese:3 slices;flour:0.3 kg;tomato sauce:0.1 liter;olive oil:0.02 liter;salt:0.01 kg;pepper:0.01 kg;garlic:0.01 kg;onions:0.05 kg;mushrooms:0.15 kg
+Chicken Wings,Big Appetite,main,chicken breast:0.5 kg;olive oil:0.05 liter;salt:0.01 kg;pepper:0.01 kg;garlic:0.02 kg
+Loaded Fries,Big Appetite,side,cheese:2 slices;tomato sauce:0.05 liter;olive oil:0.1 liter;salt:0.1 kg;pepper:0.01 kg;garlic:0.01 kg;onions:0.1 kg;mushrooms:0.05 kg
+Regular Fries,Big Appetite,side,olive oil:0.05 liter;salt:0.01 kg;pepper:0.01 kg
+Coke,Big Appetite,drink,
+Pepsi,Big Appetite,drink,
