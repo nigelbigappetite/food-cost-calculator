@@ -11,7 +11,7 @@ from utils.parse_menu import parse_menu_prices
 from utils.calculator import calculate_gp
 from utils.html_formatter import make_html_table
 
-app = FastAPI(title="Big Appetite | Food Cost Generator")
+app = FastAPI(title="Hungry Tum | Food Cost Generator")
 
 # Allow browser access
 app.add_middleware(
@@ -129,10 +129,10 @@ async def home():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Big Appetite | Food Cost Generator</title>
+        <title>Hungry Tum | Food Cost Generator</title>
         <style>
             body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px; }
+            .header { background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3); }
             .upload-section { background: #f8f9fa; padding: 30px; border-radius: 10px; border: 2px dashed #dee2e6; }
             .upload-section:hover { border-color: #667eea; background: #f0f2ff; }
             input[type="file"] { margin: 10px 0; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; }
@@ -143,8 +143,9 @@ async def home():
     </head>
     <body>
         <div class="header">
-            <h1>🍽️ Big Appetite</h1>
-            <p>Food Cost Calculator & Profit Analysis</p>
+            <div style="font-size: 48px; margin-bottom: 10px;">👹</div>
+            <h1 style="margin: 0; font-size: 2.5rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">HUNGRY TUM</h1>
+            <p style="margin: 5px 0 0 0; font-size: 1.2rem; opacity: 0.9;">Food Cost Calculator & Profit Analysis</p>
         </div>
         
         <div class="upload-section">

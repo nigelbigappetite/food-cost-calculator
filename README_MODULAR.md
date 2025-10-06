@@ -1,4 +1,4 @@
-# 🍽️ Big Appetite Food Cost Calculator - Modular Edition
+# 👹 Hungry Tum Food Cost Calculator - Modular Edition
 
 A self-contained, modular Food Cost Calculator built with FastAPI that can run locally or be hosted on Vercel/Render.
 
@@ -187,4 +187,4 @@ curl "http://localhost:8000/query?q=items under 70"
 
 ---
 
-**Built with ❤️ for Big Appetite | Food Cost Generator**
+**Built with ❤️ for Hungry Tum | Food Cost Generator**

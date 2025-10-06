@@ -1,4 +1,4 @@
-# 🍽️ Big Appetite Food Cost Calculator - Frontend
+# 👹 Hungry Tum Food Cost Calculator - Frontend
 
 ## 🚀 Quick Start
 
