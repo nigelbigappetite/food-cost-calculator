@@ -47,7 +47,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
         for i, file in enumerate(files):
             print(f"Processing file {i+1}: {file.filename}")
             content = await file.read()
-            file_type = detect_file_type(content)
+            file_type = detect_file_type(content, file.filename)
             print(f"File {file.filename} detected as: {file_type}")
             
             # Parse based on file extension

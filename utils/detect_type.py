@@ -1,7 +1,7 @@
 import pandas as pd
 import io
 
-def detect_file_type(content: bytes) -> str:
+def detect_file_type(content: bytes, filename: str = None) -> str:
     """
     Detect the type of file based on its content and column headers.
     
@@ -26,6 +26,9 @@ def detect_file_type(content: bytes) -> str:
     headers = [h.strip().lower() for h in df.columns]
     print(f"Detected headers: {headers}")  # Debug logging
     
+    # Check filename for hints
+    filename_lower = filename.lower() if filename else ""
+    
     # Detection logic based on column patterns
     # Costings: ingredient + pack size + price
     if ("ingredient" in headers or "ingredients" in headers) and ("pack size" in headers or "packsize" in headers or "pack_size" in headers):
@@ -40,6 +43,11 @@ def detect_file_type(content: bytes) -> str:
     # Costings pattern: item + pack + price (common for ingredients)
     elif "item" in headers and "pack" in headers and "price" in headers:
         print("Detected as: costings (item+pack+price pattern)")
+        return "costings"
+    
+    # Costings by filename: if filename contains "ingredient" and has price columns
+    elif "ingredient" in filename_lower and any(word in h for h in headers for word in ["price", "cost", "item", "pack"]):
+        print("Detected as: costings (filename + content)")
         return "costings"
     
     # Menu: selling price + menu item
