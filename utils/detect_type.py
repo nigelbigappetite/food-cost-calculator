@@ -37,13 +37,18 @@ def detect_file_type(content: bytes) -> str:
         print("Detected as: costings (alternative)")
         return "costings"
     
+    # Costings pattern: item + pack + price (common for ingredients)
+    elif "item" in headers and "pack" in headers and "price" in headers:
+        print("Detected as: costings (item+pack+price pattern)")
+        return "costings"
+    
     # Menu: selling price + menu item
-    elif ("selling price" in headers or any("selling price" in h for h in headers) or "price" in headers) and ("menu item" in headers or "item" in headers):
+    elif ("selling price" in headers or any("selling price" in h for h in headers)) and ("menu item" in headers or "item" in headers):
         print("Detected as: menu")
         return "menu"
     
-    # Menu alternative: just selling price or price columns
-    elif any("selling price" in h for h in headers) or any("price" in h for h in headers):
+    # Menu alternative: just selling price or price columns (but not item+pack+price)
+    elif any("selling price" in h for h in headers) or (any("price" in h for h in headers) and not ("item" in headers and "pack" in headers)):
         print("Detected as: menu (alternative)")
         return "menu"
     
