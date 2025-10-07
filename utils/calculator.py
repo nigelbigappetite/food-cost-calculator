@@ -1,6 +1,83 @@
 import pandas as pd
 import re
 
+def normalize_recipe_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize column names in recipes DataFrame to standard names.
+    
+    Args:
+        df: Raw recipes DataFrame
+        
+    Returns:
+        pd.DataFrame: DataFrame with normalized column names
+    """
+    # Clean column names
+    df.columns = df.columns.str.strip()
+    
+    # Map common column name variations to standard names
+    column_mapping = {}
+    
+    # Find menu item column (various names)
+    for col in df.columns:
+        if any(word in col.lower() for word in ["menu item", "name", "item"]):
+            column_mapping[col] = "Menu Item"
+            break
+    
+    # Find brand column (various names)
+    for col in df.columns:
+        if any(word in col.lower() for word in ["brand", "company", "restaurant"]):
+            column_mapping[col] = "Brand"
+            break
+    
+    # Find category column (various names)
+    for col in df.columns:
+        if any(word in col.lower() for word in ["category", "type", "section"]):
+            column_mapping[col] = "Category"
+            break
+    
+    # Find ingredients column (various names)
+    for col in df.columns:
+        if any(word in col.lower() for word in ["ingredients", "ingredient", "recipe"]):
+            column_mapping[col] = "Ingredients (qty+unit)"
+            break
+    
+    # Rename columns
+    df = df.rename(columns=column_mapping)
+    
+    # Add default values for missing columns
+    if "Brand" not in df.columns:
+        df["Brand"] = "Unknown"
+    if "Category" not in df.columns:
+        df["Category"] = "Unknown"
+    if "Ingredients (qty+unit)" not in df.columns:
+        # If no ingredients column, create one from ingredient columns
+        ingredient_cols = [col for col in df.columns if any(word in col.lower() for word in ["cheese", "chicken", "flour", "tomato", "olive", "salt", "pepper", "garlic", "onion", "mushroom", "beef", "pork", "fish", "rice", "pasta", "bread", "butter", "milk", "egg"]) and "selling price" not in col.lower()]
+        qty_cols = [col for col in df.columns if "qty" in col.lower() and "selling price" not in col.lower()]
+        
+        if ingredient_cols and qty_cols:
+            # Create ingredients string from ingredient and qty columns
+            ingredients_list = [[] for _ in range(len(df))]  # Initialize with empty lists for each row
+            
+            for i, ingredient_col in enumerate(ingredient_cols):
+                if i < len(qty_cols):
+                    qty_col = qty_cols[i]
+                    # Get the ingredient name (remove units in parentheses)
+                    ingredient_name = ingredient_col.split('(')[0].strip()
+                    # Get quantity from the qty column
+                    qty_values = df[qty_col].fillna(0)
+                    # Get unit from ingredient column
+                    unit = ingredient_col.split('(')[1].split(')')[0] if '(' in ingredient_col else 'unit'
+                    
+                    # Create ingredient string for each row
+                    for idx, qty in enumerate(qty_values):
+                        if qty > 0:
+                            ingredients_list[idx].append(f"{ingredient_name}: {qty} {unit}")
+            
+            # Join ingredients for each row
+            df["Ingredients (qty+unit)"] = ["; ".join(ingredients) for ingredients in ingredients_list]
+    
+    return df
+
 def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFrame = None) -> dict:
     """
     Calculate gross profit for all menu items, grouped by brand.
@@ -15,6 +92,9 @@ def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFr
     """
     all_results = []
     calculated_items = {}  # Store calculated costs for meal deals
+    
+    # Normalize column names in recipes DataFrame
+    rec_df = normalize_recipe_columns(rec_df)
     
     # First pass: Calculate individual items (non-meal deals)
     individual_items = rec_df[~rec_df["Menu Item"].str.contains("Meal:", na=False)]

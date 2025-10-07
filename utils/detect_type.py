@@ -30,12 +30,19 @@ def detect_file_type(content: bytes, filename: str = None) -> str:
     if "recipe" in filename_lower:
         print("Detected as: recipes (filename pattern)")
         return "recipes"
-    elif "menu" in filename_lower:
-        print("Detected as: menu (filename pattern)")
-        return "menu"
     elif any(word in filename_lower for word in ["product", "ingredient", "costing", "cost"]):
         print("Detected as: costings (filename pattern)")
         return "costings"
+    elif "menu" in filename_lower:
+        # For menu files, check content to see if it's actually recipes
+        print("Filename suggests menu, checking content...")
+        content_result = _detect_by_content(content)
+        if content_result == "recipes":
+            print("Content indicates recipes, overriding filename")
+            return "recipes"
+        else:
+            print("Detected as: menu (filename pattern)")
+            return "menu"
     
     # Fallback to content detection if filename doesn't match pattern
     print("Filename doesn't match expected pattern, falling back to content detection")
@@ -76,16 +83,6 @@ def _detect_by_content(content: bytes) -> str:
         print("Detected as: costings (item+pack+price)")
         return "costings"
     
-    # Menu: selling price + menu item
-    elif ("selling price" in headers or any("selling price" in h for h in headers)) and ("menu item" in headers or "item" in headers):
-        print("Detected as: menu")
-        return "menu"
-    
-    # Menu alternative: just selling price or price columns (but not item+pack+price)
-    elif any("selling price" in h for h in headers) or (any("price" in h for h in headers) and not ("item" in headers and "pack" in headers)):
-        print("Detected as: menu (alternative)")
-        return "menu"
-    
     # Recipes: ingredients + quantities + menu item
     elif ("ingredients" in headers or "ingredient" in headers) and ("qty" in headers or "quantity" in headers or "qty+unit" in headers):
         print("Detected as: recipes")
@@ -101,10 +98,37 @@ def _detect_by_content(content: bytes) -> str:
         print("Detected as: recipes")
         return "recipes"
     
+    # Recipe pattern: name + selling price + ingredient columns with quantities
+    elif ("name" in headers or "menu item" in headers) and "selling price" in headers:
+        # Check if there are ingredient columns with quantities
+        ingredient_cols = [h for h in headers if any(word in h.lower() for word in ["cheese", "chicken", "flour", "tomato", "olive", "salt", "pepper", "garlic", "onion", "mushroom"])]
+        qty_cols = [h for h in headers if "qty" in h.lower()]
+        if ingredient_cols and qty_cols:
+            print("Detected as: recipes (name+price+ingredients)")
+            return "recipes"
+    
+    # Recipe pattern: name + selling price + any ingredient-like columns
+    elif ("name" in headers or "menu item" in headers) and "selling price" in headers:
+        # Check if there are any columns that look like ingredients (contain common food words)
+        ingredient_like_cols = [h for h in headers if any(word in h.lower() for word in ["cheese", "chicken", "flour", "tomato", "olive", "salt", "pepper", "garlic", "onion", "mushroom", "beef", "pork", "fish", "rice", "pasta", "bread", "butter", "milk", "egg"])]
+        if len(ingredient_like_cols) >= 3:  # If there are 3+ ingredient-like columns, it's probably recipes
+            print("Detected as: recipes (name+price+multiple ingredients)")
+            return "recipes"
+    
     # Recipe alternative: menu item + any food-related columns
     elif "menu item" in headers and len([h for h in headers if any(word in h for word in ["ingredient", "price", "cost", "qty", "quantity", "brand", "category"])]) > 0:
         print("Detected as: recipes (fallback)")
         return "recipes"
+    
+    # Menu: selling price + menu item
+    elif ("selling price" in headers or any("selling price" in h for h in headers)) and ("menu item" in headers or "item" in headers):
+        print("Detected as: menu")
+        return "menu"
+    
+    # Menu alternative: just selling price or price columns (but not item+pack+price)
+    elif any("selling price" in h for h in headers) or (any("price" in h for h in headers) and not ("item" in headers and "pack" in headers)):
+        print("Detected as: menu (alternative)")
+        return "menu"
     
     # Last resort: if it has ingredient columns, assume costings
     elif "ingredient" in headers or "ingredients" in headers:

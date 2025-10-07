@@ -13,6 +13,36 @@ def parse_costings(df: pd.DataFrame) -> pd.DataFrame:
     # Clean column names
     df.columns = df.columns.str.strip()
     
+    # Map common column name variations to standard names
+    column_mapping = {}
+    
+    # Find ingredient column (various names)
+    for col in df.columns:
+        if any(word in col.lower() for word in ["ingredient", "name", "item"]):
+            column_mapping[col] = "Ingredient"
+            break
+    
+    # Find price column (various names)
+    for col in df.columns:
+        if any(word in col.lower() for word in ["price", "cost", "our price"]):
+            column_mapping[col] = "Our Price (£)"
+            break
+    
+    # Find pack size column (various names)
+    for col in df.columns:
+        if any(word in col.lower() for word in ["pack", "quantity", "size"]):
+            column_mapping[col] = "Pack Size"
+            break
+    
+    # Rename columns
+    df = df.rename(columns=column_mapping)
+    
+    # Check if we have the required columns
+    required_cols = ["Ingredient", "Our Price (£)", "Pack Size"]
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {missing_cols}. Available columns: {list(df.columns)}")
+    
     # Normalize ingredient names for matching
     df["Ingredient_norm"] = df["Ingredient"].str.lower().str.strip()
     
