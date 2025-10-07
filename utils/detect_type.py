@@ -3,13 +3,47 @@ import io
 
 def detect_file_type(content: bytes, filename: str = None) -> str:
     """
-    Detect the type of file based on its content and column headers.
+    Detect the type of file based on filename pattern and content.
+    
+    Expected filename pattern: "Brand Name - Function"
+    Examples:
+    - "SMSH BN - recipes" -> recipes
+    - "SMSH BN - menu" -> menu  
+    - "SMSH BN - Product list" -> costings
     
     Args:
         content: Raw file content as bytes
+        filename: Filename for pattern detection
         
     Returns:
         str: File type ('costings', 'recipes', 'menu', or 'unknown')
+    """
+    if not filename:
+        print("No filename provided, falling back to content detection")
+        return _detect_by_content(content)
+    
+    # Normalize filename for pattern matching
+    filename_lower = filename.lower().strip()
+    print(f"Analyzing filename: {filename}")
+    
+    # Check for function keywords in filename
+    if "recipe" in filename_lower:
+        print("Detected as: recipes (filename pattern)")
+        return "recipes"
+    elif "menu" in filename_lower:
+        print("Detected as: menu (filename pattern)")
+        return "menu"
+    elif any(word in filename_lower for word in ["product", "ingredient", "costing", "cost"]):
+        print("Detected as: costings (filename pattern)")
+        return "costings"
+    
+    # Fallback to content detection if filename doesn't match pattern
+    print("Filename doesn't match expected pattern, falling back to content detection")
+    return _detect_by_content(content)
+
+def _detect_by_content(content: bytes) -> str:
+    """
+    Fallback detection based on file content and column headers.
     """
     try:
         # Try CSV first
@@ -24,10 +58,7 @@ def detect_file_type(content: bytes, filename: str = None) -> str:
     
     # Normalize column headers
     headers = [h.strip().lower() for h in df.columns]
-    print(f"Detected headers: {headers}")  # Debug logging
-    
-    # Check filename for hints
-    filename_lower = filename.lower() if filename else ""
+    print(f"Detected headers: {headers}")
     
     # Detection logic based on column patterns
     # Costings: ingredient + pack size + price
@@ -42,12 +73,7 @@ def detect_file_type(content: bytes, filename: str = None) -> str:
     
     # Costings pattern: item + pack + price (common for ingredients)
     elif "item" in headers and "pack" in headers and "price" in headers:
-        print("Detected as: costings (item+pack+price pattern)")
-        return "costings"
-    
-    # Costings by filename: if filename contains "ingredient" and has price columns
-    elif "ingredient" in filename_lower and any(word in h for h in headers for word in ["price", "cost", "item", "pack"]):
-        print("Detected as: costings (filename + content)")
+        print("Detected as: costings (item+pack+price)")
         return "costings"
     
     # Menu: selling price + menu item

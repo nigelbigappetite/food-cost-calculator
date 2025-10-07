@@ -255,13 +255,23 @@ async def home():
             </form>
             
             <div class="info">
+                <h3>📋 File Naming Convention:</h3>
+                <p><strong>Please name your files using this pattern:</strong></p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 10px 0; font-family: monospace; font-size: 14px;">
+                    <strong>Brand Name - Function</strong><br>
+                    Examples:<br>
+                    • SMSH BN - recipes<br>
+                    • SMSH BN - menu<br>
+                    • SMSH BN - Product list
+                </div>
+                
                 <h3>📋 Supported File Types:</h3>
                 <ul>
-                    <li><strong>Costings:</strong> Ingredient costs and pack sizes</li>
+                    <li><strong>Product list:</strong> Ingredient costs and pack sizes (costings)</li>
                     <li><strong>Recipes:</strong> Menu items with ingredient quantities</li>
-                    <li><strong>Menu Prices:</strong> Selling prices for menu items</li>
+                    <li><strong>Menu:</strong> Selling prices for menu items</li>
                 </ul>
-                <p>I'll auto-detect file types, calculate FC, GP £, and GP %, and show results below.</p>
+                <p>I'll auto-detect file types based on filename, calculate FC, GP £, and GP %, and show results below.</p>
             </div>
         </div>
         
