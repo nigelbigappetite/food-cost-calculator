@@ -14,26 +14,48 @@ def detect_file_type(content: bytes) -> str:
     try:
         # Try CSV first
         df = pd.read_csv(io.BytesIO(content))
-    except:
+    except Exception as e:
         try:
             # Try Excel if CSV fails
             df = pd.read_excel(io.BytesIO(content))
-        except:
+        except Exception as e2:
+            print(f"Failed to read file: CSV error: {e}, Excel error: {e2}")
             return "unknown"
     
     # Normalize column headers
     headers = [h.strip().lower() for h in df.columns]
+    print(f"Detected headers: {headers}")  # Debug logging
     
     # Detection logic based on column patterns
-    if "ingredient" in headers and ("pack size" in headers or "packsize" in headers):
+    # Costings: ingredient + pack size + price
+    if ("ingredient" in headers or "ingredients" in headers) and ("pack size" in headers or "packsize" in headers or "pack_size" in headers):
+        print("Detected as: costings")
         return "costings"
-    elif "selling price" in headers or any("selling price" in h for h in headers):
+    
+    # Menu: selling price + menu item
+    elif ("selling price" in headers or any("selling price" in h for h in headers) or "price" in headers) and ("menu item" in headers or "item" in headers):
+        print("Detected as: menu")
         return "menu"
-    elif "ingredients" in headers and ("qty" in headers or "quantity" in headers):
-        return "recipes"
-    elif "menu item" in headers and "ingredients" in headers:
-        return "recipes"
-    elif "menu item" in headers and "brand" in headers and "category" in headers:
+    
+    # Recipes: ingredients + quantities + menu item
+    elif ("ingredients" in headers or "ingredient" in headers) and ("qty" in headers or "quantity" in headers or "qty+unit" in headers):
+        print("Detected as: recipes")
         return "recipes"
     
+    # Alternative recipe detection: menu item + ingredients
+    elif "menu item" in headers and ("ingredients" in headers or "ingredient" in headers):
+        print("Detected as: recipes")
+        return "recipes"
+    
+    # Another recipe pattern: menu item + brand + category
+    elif "menu item" in headers and "brand" in headers and "category" in headers:
+        print("Detected as: recipes")
+        return "recipes"
+    
+    # Fallback: if it has menu item and some other food-related columns
+    elif "menu item" in headers and len([h for h in headers if any(word in h for word in ["ingredient", "price", "cost", "qty", "quantity"])]) > 0:
+        print("Detected as: recipes (fallback)")
+        return "recipes"
+    
+    print(f"Could not detect file type. Headers: {headers}")
     return "unknown"

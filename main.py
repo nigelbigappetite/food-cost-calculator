@@ -35,10 +35,20 @@ async def upload_files(files: list[UploadFile] = File(...)):
     Auto-detects file types and calculates food costs.
     """
     try:
+        print(f"Received {len(files)} files for upload")
+        
+        # Reset database
+        db["costings"] = None
+        db["recipes"] = None
+        db["menu"] = None
+        db["results"] = None
+        
         # Process each uploaded file
-        for file in files:
+        for i, file in enumerate(files):
+            print(f"Processing file {i+1}: {file.filename}")
             content = await file.read()
             file_type = detect_file_type(content)
+            print(f"File {file.filename} detected as: {file_type}")
             
             # Parse based on file extension
             if file.filename.endswith(".csv"):
@@ -46,24 +56,35 @@ async def upload_files(files: list[UploadFile] = File(...)):
             else:
                 df = pd.read_excel(io.BytesIO(content))
             
+            print(f"File {file.filename} has {len(df)} rows and columns: {list(df.columns)}")
+            
             # Store based on detected type
             if file_type == "costings":
                 db["costings"] = parse_costings(df)
+                print(f"Stored costings data: {len(db['costings'])} rows")
             elif file_type == "recipes":
                 db["recipes"] = parse_recipes(df)
+                print(f"Stored recipes data: {len(db['recipes'])} rows")
             elif file_type == "menu":
                 db["menu"] = parse_menu_prices(df)
+                print(f"Stored menu data: {len(db['menu'])} rows")
+            else:
+                print(f"Warning: Could not detect type for {file.filename}")
+        
+        # Debug: Check what we have
+        print(f"Final state - Costings: {db['costings'] is not None}, Recipes: {db['recipes'] is not None}, Menu: {db['menu'] is not None}")
         
         # Validate required data
         if db["costings"] is None or db["recipes"] is None:
-            return JSONResponse(
-                {"error": "Need at least costings and recipes data"}, 
-                status_code=400
-            )
+            error_msg = f"Need at least costings and recipes data. Got: costings={db['costings'] is not None}, recipes={db['recipes'] is not None}, menu={db['menu'] is not None}"
+            print(error_msg)
+            return JSONResponse({"error": error_msg}, status_code=400)
         
         # Calculate results (now returns brand-grouped data)
         brand_results = calculate_gp(db["costings"], db["recipes"], db["menu"])
         db["results"] = brand_results
+        
+        print(f"Calculated results for brands: {list(brand_results.keys())}")
         
         # Generate HTML table with brand sections
         html_table = make_html_table(brand_results)
@@ -71,6 +92,9 @@ async def upload_files(files: list[UploadFile] = File(...)):
         return HTMLResponse(content=html_table)
         
     except Exception as e:
+        print(f"Upload error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.get("/results")
