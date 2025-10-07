@@ -32,9 +32,19 @@ def detect_file_type(content: bytes) -> str:
         print("Detected as: costings")
         return "costings"
     
+    # Costings alternative: ingredient + price/cost columns
+    elif ("ingredient" in headers or "ingredients" in headers) and any(word in h for h in headers for word in ["price", "cost", "our price", "unit cost"]):
+        print("Detected as: costings (alternative)")
+        return "costings"
+    
     # Menu: selling price + menu item
     elif ("selling price" in headers or any("selling price" in h for h in headers) or "price" in headers) and ("menu item" in headers or "item" in headers):
         print("Detected as: menu")
+        return "menu"
+    
+    # Menu alternative: just selling price or price columns
+    elif any("selling price" in h for h in headers) or any("price" in h for h in headers):
+        print("Detected as: menu (alternative)")
         return "menu"
     
     # Recipes: ingredients + quantities + menu item
@@ -52,10 +62,15 @@ def detect_file_type(content: bytes) -> str:
         print("Detected as: recipes")
         return "recipes"
     
-    # Fallback: if it has menu item and some other food-related columns
-    elif "menu item" in headers and len([h for h in headers if any(word in h for word in ["ingredient", "price", "cost", "qty", "quantity"])]) > 0:
+    # Recipe alternative: menu item + any food-related columns
+    elif "menu item" in headers and len([h for h in headers if any(word in h for word in ["ingredient", "price", "cost", "qty", "quantity", "brand", "category"])]) > 0:
         print("Detected as: recipes (fallback)")
         return "recipes"
+    
+    # Last resort: if it has ingredient columns, assume costings
+    elif "ingredient" in headers or "ingredients" in headers:
+        print("Detected as: costings (last resort)")
+        return "costings"
     
     print(f"Could not detect file type. Headers: {headers}")
     return "unknown"
