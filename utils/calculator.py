@@ -1,9 +1,9 @@
 import pandas as pd
 import re
 
-def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFrame = None) -> pd.DataFrame:
+def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFrame = None) -> dict:
     """
-    Calculate gross profit for all menu items.
+    Calculate gross profit for all menu items, grouped by brand.
     
     Args:
         cost_df: Costings DataFrame with unit costs
@@ -11,9 +11,9 @@ def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFr
         menu_df: Menu prices DataFrame (optional)
         
     Returns:
-        pd.DataFrame: Results with food costs and GP calculations
+        dict: Results grouped by brand with food costs and GP calculations
     """
-    results = []
+    all_results = []
     calculated_items = {}  # Store calculated costs for meal deals
     
     # First pass: Calculate individual items (non-meal deals)
@@ -46,7 +46,7 @@ def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFr
             "Notes": "; ".join(notes) if notes else ""
         }
         
-        results.append(result)
+        all_results.append(result)
         calculated_items[row["Menu Item"]] = fc  # Store for meal deals
     
     # Second pass: Calculate meal deals using individual item costs
@@ -64,7 +64,7 @@ def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFr
         gp = sp - fc if sp else 0
         gp_pct = (gp / sp * 100) if sp else 0
         
-        results.append({
+        all_results.append({
             "Brand": row.get("Brand", ""),
             "Menu Item": row["Menu Item"],
             "Category": row.get("Category", ""),
@@ -75,7 +75,17 @@ def calculate_gp(cost_df: pd.DataFrame, rec_df: pd.DataFrame, menu_df: pd.DataFr
             "Notes": "; ".join(notes) if notes else ""
         })
     
-    return pd.DataFrame(results)
+    # Group results by brand
+    results_df = pd.DataFrame(all_results)
+    brand_groups = {}
+    
+    if not results_df.empty:
+        for brand in results_df["Brand"].unique():
+            if pd.notna(brand) and brand.strip():
+                brand_data = results_df[results_df["Brand"] == brand]
+                brand_groups[brand] = brand_data.to_dict(orient="records")
+    
+    return brand_groups
 
 def calc_item_cost(row: pd.Series, cost_df: pd.DataFrame, calculated_items: dict = None) -> tuple[float, list]:
     """

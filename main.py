@@ -61,11 +61,12 @@ async def upload_files(files: list[UploadFile] = File(...)):
                 status_code=400
             )
         
-        # Calculate results
-        db["results"] = calculate_gp(db["costings"], db["recipes"], db["menu"])
+        # Calculate results (now returns brand-grouped data)
+        brand_results = calculate_gp(db["costings"], db["recipes"], db["menu"])
+        db["results"] = brand_results
         
-        # Generate HTML table
-        html_table = make_html_table(db["results"])
+        # Generate HTML table with brand sections
+        html_table = make_html_table(brand_results)
         
         return HTMLResponse(content=html_table)
         
@@ -77,7 +78,7 @@ async def get_results():
     """Get results as JSON."""
     if db["results"] is None:
         return JSONResponse({"error": "No results yet. Upload files first."}, status_code=400)
-    return db["results"].to_dict(orient="records")
+    return db["results"]
 
 @app.get("/query")
 async def query_data(q: str):
@@ -101,22 +102,28 @@ async def query_data(q: str):
     
     # 2) Menu item GP lookup
     if "gp" in q_low or "margin" in q_low:
-        for _, r in db["results"].iterrows():
-            if r["Menu Item"].lower() in q_low:
-                return {
-                    "Menu Item": r["Menu Item"],
-                    "Food Cost (£)": r["Food Cost (£)"],
-                    "GP £": r["GP £"],
-                    "GP %": r["GP %"]
-                }
+        for brand, brand_data in db["results"].items():
+            for item in brand_data:
+                if item["Menu Item"].lower() in q_low:
+                    return {
+                        "Brand": item["Brand"],
+                        "Menu Item": item["Menu Item"],
+                        "Food Cost (£)": item["Food Cost (£)"],
+                        "GP £": item["GP £"],
+                        "GP %": item["GP %"]
+                    }
     
     # 3) Filter by GP threshold
     import re
     m = re.search(r"under\s*(\d+)", q_low)
     if m:
         threshold = float(m.group(1))
-        under = db["results"][db["results"]["GP %"] < threshold]
-        return under.to_dict(orient="records")
+        results = []
+        for brand, brand_data in db["results"].items():
+            for item in brand_data:
+                if item["GP %"] < threshold:
+                    results.append(item)
+        return results
     
     return {"message": "Query not recognised. Try: 'cheese cost', 'chicken pizza gp', or 'items under 70'"}
 
