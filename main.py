@@ -255,8 +255,21 @@ async def home():
             </form>
             
             <div class="info">
+                <h3>📋 Standardized Templates:</h3>
+                <p><strong>Download these templates and fill them with your data:</strong></p>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <p><strong>📄 Product Prices Template:</strong> <a href="/templates/product-prices-template.csv" download>Download CSV</a></p>
+                    <p style="margin: 5px 0; font-size: 14px; color: #666;">Columns: Item Name, Purchase Price, Quantity, Unit</p>
+                    
+                    <p><strong>📄 Recipes Template:</strong> <a href="/templates/recipes-template.csv" download>Download CSV</a></p>
+                    <p style="margin: 5px 0; font-size: 14px; color: #666;">Columns: Menu Item, Brand, Category, Ingredient, Quantity, Unit</p>
+                    
+                    <p><strong>📄 Menu Template:</strong> <a href="/templates/menu-template.csv" download>Download CSV</a></p>
+                    <p style="margin: 5px 0; font-size: 14px; color: #666;">Columns: Item Name, Selling Price</p>
+                </div>
+                
                 <h3>📋 File Naming Convention:</h3>
-                <p><strong>Please name your files using this pattern:</strong></p>
+                <p><strong>Name your files using this pattern:</strong></p>
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 10px 0; font-family: monospace; font-size: 14px;">
                     <strong>Brand Name - Function</strong><br>
                     Examples:<br>
@@ -265,13 +278,7 @@ async def home():
                     • SMSH BN - Product list
                 </div>
                 
-                <h3>📋 Supported File Types:</h3>
-                <ul>
-                    <li><strong>Product list:</strong> Ingredient costs and pack sizes (costings)</li>
-                    <li><strong>Recipes:</strong> Menu items with ingredient quantities</li>
-                    <li><strong>Menu:</strong> Selling prices for menu items</li>
-                </ul>
-                <p>I'll auto-detect file types based on filename, calculate FC, GP £, and GP %, and show results below.</p>
+                <p>I'll auto-detect file types, calculate FC, GP £, and GP %, and show results below.</p>
             </div>
         </div>
         
@@ -282,6 +289,18 @@ async def home():
     </body>
     </html>
     """)
+
+@app.get("/templates/{filename}")
+async def download_template(filename: str):
+    """Download template files."""
+    from fastapi.responses import FileResponse
+    import os
+    
+    template_path = f"templates/{filename}"
+    if os.path.exists(template_path):
+        return FileResponse(template_path, filename=filename)
+    else:
+        return JSONResponse({"error": "Template not found"}, status_code=404)
 
 @app.get("/api")
 async def api_info():

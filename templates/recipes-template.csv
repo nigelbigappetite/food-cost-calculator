@@ -1,0 +1,34 @@
+Menu Item,Brand,Category,Ingredient,Quantity,Unit
+Margherita Pizza,SMSH BN,main,Cheese,3,slices
+Margherita Pizza,SMSH BN,main,Flour,0.3,kg
+Margherita Pizza,SMSH BN,main,Tomato Sauce,0.1,liter
+Margherita Pizza,SMSH BN,main,Olive Oil,0.02,liter
+Margherita Pizza,SMSH BN,main,Salt,0.01,kg
+Margherita Pizza,SMSH BN,main,Pepper,0.01,kg
+Margherita Pizza,SMSH BN,main,Garlic,0.01,kg
+Margherita Pizza,SMSH BN,main,Onions,0.05,kg
+Chicken Pizza,SMSH BN,main,Cheese,3,slices
+Chicken Pizza,SMSH BN,main,Flour,0.3,kg
+Chicken Pizza,SMSH BN,main,Chicken Breast,0.2,kg
+Chicken Pizza,SMSH BN,main,Tomato Sauce,0.1,liter
+Chicken Pizza,SMSH BN,main,Olive Oil,0.02,liter
+Chicken Pizza,SMSH BN,main,Salt,0.01,kg
+Chicken Pizza,SMSH BN,main,Pepper,0.01,kg
+Chicken Pizza,SMSH BN,main,Garlic,0.01,kg
+Chicken Pizza,SMSH BN,main,Onions,0.05,kg
+Chicken Wings,SMSH BN,main,Chicken Breast,0.5,kg
+Chicken Wings,SMSH BN,main,Olive Oil,0.05,liter
+Chicken Wings,SMSH BN,main,Salt,0.01,kg
+Chicken Wings,SMSH BN,main,Pepper,0.01,kg
+Chicken Wings,SMSH BN,main,Garlic,0.02,kg
+Loaded Fries,SMSH BN,side,Cheese,2,slices
+Loaded Fries,SMSH BN,side,Tomato Sauce,0.05,liter
+Loaded Fries,SMSH BN,side,Olive Oil,0.1,liter
+Loaded Fries,SMSH BN,side,Salt,0.1,kg
+Loaded Fries,SMSH BN,side,Pepper,0.01,kg
+Loaded Fries,SMSH BN,side,Garlic,0.01,kg
+Loaded Fries,SMSH BN,side,Onions,0.1,kg
+Loaded Fries,SMSH BN,side,Mushrooms,0.05,kg
+Regular Fries,SMSH BN,side,Olive Oil,0.05,liter
+Regular Fries,SMSH BN,side,Salt,0.01,kg
+Regular Fries,SMSH BN,side,Pepper,0.01,kg

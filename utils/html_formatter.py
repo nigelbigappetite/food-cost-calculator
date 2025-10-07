@@ -1,3 +1,5 @@
+import pandas as pd
+
 def make_html_table(brand_groups) -> str:
     """
     Create brand-specific HTML sections from grouped results.
