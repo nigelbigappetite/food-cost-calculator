@@ -131,21 +131,88 @@ async def home():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Hungry Tum | Food Cost Generator</title>
         <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3); }
-            .upload-section { background: #f8f9fa; padding: 30px; border-radius: 10px; border: 2px dashed #dee2e6; }
-            .upload-section:hover { border-color: #667eea; background: #f0f2ff; }
-            input[type="file"] { margin: 10px 0; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; }
-            input[type="submit"] { background: #667eea; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-            input[type="submit"]:hover { background: #5a6fd8; }
-            .info { background: #e3f2fd; padding: 15px; border-radius: 5px; margin-top: 20px; }
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                max-width: 900px; 
+                margin: 0 auto; 
+                padding: 20px; 
+                background: #f8f9fa;
+                line-height: 1.6;
+            }
+            .header { 
+                background: linear-gradient(135deg, #2c3e50, #34495e); 
+                color: white; 
+                padding: 40px; 
+                border-radius: 12px; 
+                text-align: center; 
+                margin-bottom: 30px; 
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            }
+            .upload-section { 
+                background: white; 
+                padding: 40px; 
+                border-radius: 12px; 
+                border: 2px dashed #e9ecef; 
+                box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+                transition: all 0.3s ease;
+            }
+            .upload-section:hover { 
+                border-color: #3498db; 
+                background: #f8f9fa; 
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            }
+            input[type="file"] { 
+                margin: 15px 0; 
+                padding: 12px; 
+                width: 100%; 
+                border: 2px solid #e9ecef; 
+                border-radius: 8px; 
+                font-size: 16px;
+                transition: border-color 0.3s ease;
+            }
+            input[type="file"]:focus { 
+                outline: none; 
+                border-color: #3498db; 
+            }
+            input[type="submit"] { 
+                background: linear-gradient(135deg, #3498db, #2980b9); 
+                color: white; 
+                padding: 16px 32px; 
+                border: none; 
+                border-radius: 8px; 
+                cursor: pointer; 
+                font-size: 16px; 
+                font-weight: 600;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            }
+            input[type="submit"]:hover { 
+                background: linear-gradient(135deg, #2980b9, #1f618d); 
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+            }
+            .info { 
+                background: #e8f4fd; 
+                padding: 20px; 
+                border-radius: 8px; 
+                margin-top: 20px; 
+                border-left: 4px solid #3498db;
+            }
+            .logo { 
+                width: 80px; 
+                height: 80px; 
+                margin-bottom: 20px; 
+            }
         </style>
     </head>
     <body>
         <div class="header">
-            <div style="font-size: 48px; margin-bottom: 10px;">👹</div>
-            <h1 style="margin: 0; font-size: 2.5rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">HUNGRY TUM</h1>
-            <p style="margin: 5px 0 0 0; font-size: 1.2rem; opacity: 0.9;">Food Cost Calculator & Profit Analysis</p>
+            <div style="margin-bottom: 20px;">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzgiIGZpbGw9IiNmZjZiMzUiLz4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iOCIgZmlsbD0id2hpdGUiLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSIzMCIgcj0iOCIgZmlsbD0id2hpdGUiLz4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iNCIgZmlsbD0iYmxhY2siLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSIzMCIgcj0iNCIgZmlsbD0iYmxhY2siLz4KPHBhdGggZD0iTTI1IDU1IEMzMCA1MCA0MCA1MCA0MCA1MCBDNDAgNTAgNTAgNTAgNTUgNTUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMCAyMCBDMjAgMTUgMjUgMTAgMzAgMTAgQzM1IDEwIDQwIDE1IDQwIDIwIiBzdHJva2U9IiNmZjZiMzUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00MCAyMCBDNDAgMTUgNDUgMTAgNTAgMTAgQzU1IDEwIDYwIDE1IDYwIDIwIiBzdHJva2U9IiNmZjZiMzUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" alt="Hungry Tum Logo" class="logo">
+            </div>
+            <h1 style="margin: 0; font-size: 2.8rem; font-weight: 700; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">HUNGRY TUM</h1>
+            <p style="margin: 8px 0 0 0; font-size: 1.1rem; opacity: 0.9; font-weight: 300;">Food Cost Calculator & Profit Analysis</p>
         </div>
         
         <div class="upload-section">

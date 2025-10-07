@@ -18,18 +18,20 @@ def make_html_table(df) -> str:
             return "#FF6B6B"  # Red
     
     # Start building HTML
-    html = '<div style="font-family: Arial, sans-serif; margin: 20px;">'
+    html = '<div style="font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 20px;">'
     html += '''
-    <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #ff6b35, #f7931e); border-radius: 15px; color: white;">
-        <div style="font-size: 48px; margin-bottom: 10px;">👹</div>
-        <h1 style="margin: 0; font-size: 2.5rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">HUNGRY TUM</h1>
-        <p style="margin: 5px 0 0 0; font-size: 1.2rem; opacity: 0.9;">Food Cost Analysis</p>
+    <div style="text-align: center; margin-bottom: 30px; padding: 30px; background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 12px; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+        <div style="margin-bottom: 20px;">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzgiIGZpbGw9IiNmZjZiMzUiLz4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iOCIgZmlsbD0id2hpdGUiLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSIzMCIgcj0iOCIgZmlsbD0id2hpdGUiLz4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iNCIgZmlsbD0iYmxhY2siLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSIzMCIgcj0iNCIgZmlsbD0iYmxhY2siLz4KPHBhdGggZD0iTTI1IDU1IEMzMCA1MCA0MCA1MCA0MCA1MCBDNDAgNTAgNTAgNTAgNTUgNTUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yMCAyMCBDMjAgMTUgMjUgMTAgMzAgMTAgQzM1IDEwIDQwIDE1IDQwIDIwIiBzdHJva2U9IiNmZjZiMzUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik00MCAyMCBDNDAgMTUgNDUgMTAgNTAgMTAgQzU1IDEwIDYwIDE1IDYwIDIwIiBzdHJva2U9IiNmZjZiMzUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" alt="Hungry Tum Logo" style="width: 80px; height: 80px; margin-bottom: 15px;">
+        </div>
+        <h1 style="margin: 0; font-size: 2.8rem; font-weight: 700; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">HUNGRY TUM</h1>
+        <p style="margin: 8px 0 0 0; font-size: 1.1rem; opacity: 0.9; font-weight: 300;">Food Cost Analysis</p>
     </div>
     '''
     html += '<table style="width:100%; border-collapse: collapse; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">'
     
     # Header row
-    html += '<tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: bold;">'
+    html += '<tr style="background: linear-gradient(135deg, #34495e, #2c3e50); color: white; font-weight: 600; font-size: 0.9rem;">'
     for col in df.columns:
         html += f'<td style="border: 1px solid #ddd; padding: 12px; text-align: center;">{col}</td>'
     html += '</tr>'
