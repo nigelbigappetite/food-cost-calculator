@@ -21,6 +21,10 @@ def parse_menu_prices(df: pd.DataFrame) -> pd.DataFrame:
             "Item Name": "Menu Item",
             "Selling Price": "Selling Price (£)"
         })
+        
+        # Add default category if missing
+        if "Category" not in df.columns:
+            df["Category"] = "Unknown"
     else:
         # Fallback to old mapping for backward compatibility
         column_mapping = {}

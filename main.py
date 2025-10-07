@@ -265,7 +265,7 @@ async def home():
                     <p style="margin: 5px 0; font-size: 14px; color: #666;">Columns: Menu Item, Brand, Category, Ingredient, Quantity, Unit</p>
                     
                     <p><strong>📄 Menu Template:</strong> <a href="/templates/menu-template.csv" download>Download CSV</a></p>
-                    <p style="margin: 5px 0; font-size: 14px; color: #666;">Columns: Item Name, Selling Price</p>
+                    <p style="margin: 5px 0; font-size: 14px; color: #666;">Columns: Item Name, Category, Selling Price</p>
                 </div>
                 
                 <h3>📋 File Naming Convention:</h3>
